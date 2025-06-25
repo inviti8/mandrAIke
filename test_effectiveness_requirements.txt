@@ -15,8 +15,8 @@ scikit-image>=0.19.0
 scipy>=1.7.0
 
 # Optional: For better performance
-tensorflow-gpu>=2.10.0  # If GPU available
-torch-cuda  # If CUDA available
+# tensorflow-gpu>=2.10.0  # If GPU available
+# torch-cuda  # If CUDA available
 
 # Development and testing
 pytest>=6.0.0

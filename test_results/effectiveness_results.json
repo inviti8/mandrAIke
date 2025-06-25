@@ -1,0 +1,4836 @@
+{
+  "summary": {
+    "total_tests": 12,
+    "successful_protections": 12,
+    "protection_success_rate": 1.0
+  },
+  "by_model": {
+    "inception_v3": {
+      "total_tests": 12,
+      "avg_confidence_reduction": -0.06909579286972682,
+      "avg_confidence_reduction_percentage": -17.1340012268965,
+      "confidence_reduction_success_rate": 0.4166666666666667,
+      "avg_max_confidence_reduction": -0.06909579286972682,
+      "avg_entropy_increase": -0.15485369059178147,
+      "attack_success_rate": 0.6666666666666666,
+      "avg_psnr": 24.97434820425479
+    },
+    "resnet50": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.041077472269535065,
+      "avg_confidence_reduction_percentage": 5.970214947698906,
+      "confidence_reduction_success_rate": 0.5833333333333334,
+      "avg_max_confidence_reduction": 0.041077472269535065,
+      "avg_entropy_increase": -0.06843635381096269,
+      "attack_success_rate": 0.08333333333333333,
+      "avg_psnr": 24.97434820425479
+    },
+    "efficientnet_b0": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.03775357951720556,
+      "avg_confidence_reduction_percentage": 0.25947551506402294,
+      "confidence_reduction_success_rate": 0.75,
+      "avg_max_confidence_reduction": 0.03775357951720556,
+      "avg_entropy_increase": 0.027087716120091383,
+      "attack_success_rate": 0.5,
+      "avg_psnr": 24.97434820425479
+    },
+    "pytorch_resnet50": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.015068879040579,
+      "avg_confidence_reduction_percentage": 6.821950835155996,
+      "confidence_reduction_success_rate": 0.6666666666666666,
+      "avg_max_confidence_reduction": 0.015068879040579,
+      "avg_entropy_increase": 0.05493069792854738,
+      "attack_success_rate": 0.25,
+      "avg_psnr": 24.97434820425479
+    },
+    "pytorch_efficientnet": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.051963942125439644,
+      "avg_confidence_reduction_percentage": 12.976094261348555,
+      "confidence_reduction_success_rate": 0.75,
+      "avg_max_confidence_reduction": 0.051963942125439644,
+      "avg_entropy_increase": 0.13865301008542424,
+      "attack_success_rate": 0.25,
+      "avg_psnr": 24.97434820425479
+    },
+    "pytorch_vit": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.04563488314549128,
+      "avg_confidence_reduction_percentage": -9.926242133382464,
+      "confidence_reduction_success_rate": 0.5,
+      "avg_max_confidence_reduction": 0.04563488314549128,
+      "avg_entropy_increase": 0.10990516435811337,
+      "attack_success_rate": 0.0,
+      "avg_psnr": 24.97434820425479
+    }
+  },
+  "by_method": {
+    "poison": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.020400493871420622,
+      "confidence_reduction_success_rate": 0.6111111111111112,
+      "attack_success_rate": 0.75,
+      "avg_psnr": 24.97434820425479
+    }
+  },
+  "by_strength": {
+    "low": {
+      "total_tests": 4,
+      "avg_confidence_reduction": 0.029260060749948025,
+      "confidence_reduction_success_rate": 0.6666666666666666,
+      "attack_success_rate": 0.5
+    },
+    "medium": {
+      "total_tests": 4,
+      "avg_confidence_reduction": 0.004828449183454116,
+      "confidence_reduction_success_rate": 0.5833333333333334,
+      "attack_success_rate": 0.75
+    },
+    "high": {
+      "total_tests": 4,
+      "avg_confidence_reduction": 0.027112971680859726,
+      "confidence_reduction_success_rate": 0.5833333333333334,
+      "attack_success_rate": 1.0
+    }
+  },
+  "by_target": {
+    "target_image.jpg": {
+      "total_tests": 12,
+      "avg_confidence_reduction": 0.020400493871420622,
+      "confidence_reduction_success_rate": 0.6111111111111112,
+      "attack_success_rate": 0.75
+    }
+  },
+  "detailed_results": [
+    {
+      "image_path": "test_images/eiffel.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_eiffel_target_image_poison_low.jpg",
+      "protection_strength": "low",
+      "strength_value": 0.1,
+      "protection_time": 14.498009204864502,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "fountain",
+            0.39017054438591003
+          ],
+          "protected_top1": [
+            "stupa",
+            0.3820534348487854
+          ],
+          "original_top5": [
+            [
+              "fountain",
+              0.39017054438591003
+            ],
+            [
+              "stupa",
+              0.31359022855758667
+            ],
+            [
+              "palace",
+              0.04142991080880165
+            ],
+            [
+              "carousel",
+              0.006998792290687561
+            ],
+            [
+              "altar",
+              0.006038660649210215
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.3820534348487854
+            ],
+            [
+              "fountain",
+              0.359789103269577
+            ],
+            [
+              "palace",
+              0.024188026785850525
+            ],
+            [
+              "church",
+              0.006863903254270554
+            ],
+            [
+              "obelisk",
+              0.005282516125589609
+            ]
+          ],
+          "confidence_reduction": 0.008117109537124634,
+          "confidence_reduction_percentage": 2.080400392577088,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.008117109537124634,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3671189328453448,
+          "protected_confidence_entropy": 1.2832017259140753,
+          "entropy_increase": -0.08391720693126947
+        },
+        "resnet50": {
+          "original_top1": [
+            "drilling_platform",
+            0.48427894711494446
+          ],
+          "protected_top1": [
+            "drilling_platform",
+            0.5926897525787354
+          ],
+          "original_top5": [
+            [
+              "drilling_platform",
+              0.48427894711494446
+            ],
+            [
+              "fountain",
+              0.1503421515226364
+            ],
+            [
+              "fireboat",
+              0.10509125888347626
+            ],
+            [
+              "crane",
+              0.05254104360938072
+            ],
+            [
+              "stupa",
+              0.038327429443597794
+            ]
+          ],
+          "protected_top5": [
+            [
+              "drilling_platform",
+              0.5926897525787354
+            ],
+            [
+              "fountain",
+              0.11196979135274887
+            ],
+            [
+              "stupa",
+              0.06710340827703476
+            ],
+            [
+              "crane",
+              0.022095775231719017
+            ],
+            [
+              "fireboat",
+              0.014449680224061012
+            ]
+          ],
+          "confidence_reduction": -0.1084108054637909,
+          "confidence_reduction_percentage": -22.386024853989657,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.1084108054637909,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.734204649531062,
+          "protected_confidence_entropy": 1.2670757205695433,
+          "entropy_increase": -0.4671289289615186
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "crane",
+            0.31686311960220337
+          ],
+          "protected_top1": [
+            "stupa",
+            0.334396630525589
+          ],
+          "original_top5": [
+            [
+              "crane",
+              0.31686311960220337
+            ],
+            [
+              "stupa",
+              0.24720193445682526
+            ],
+            [
+              "drilling_platform",
+              0.04390938952565193
+            ],
+            [
+              "pier",
+              0.03127284720540047
+            ],
+            [
+              "obelisk",
+              0.023081142455339432
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.334396630525589
+            ],
+            [
+              "crane",
+              0.2683609127998352
+            ],
+            [
+              "drilling_platform",
+              0.03309278190135956
+            ],
+            [
+              "pier",
+              0.025483746081590652
+            ],
+            [
+              "beacon",
+              0.022164111956954002
+            ]
+          ],
+          "confidence_reduction": -0.01753351092338562,
+          "confidence_reduction_percentage": -5.533465347875625,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.01753351092338562,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.6758324867243366,
+          "protected_confidence_entropy": 1.5829899268694474,
+          "entropy_increase": -0.0928425598548892
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_517",
+            0.08409726619720459
+          ],
+          "protected_top1": [
+            "class_741",
+            0.04119531810283661
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.08409726619720459
+            ],
+            [
+              "class_540",
+              0.02975849062204361
+            ],
+            [
+              "class_611",
+              0.022027017548680305
+            ],
+            [
+              "class_741",
+              0.021399829536676407
+            ],
+            [
+              "class_562",
+              0.020556408911943436
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_741",
+              0.04119531810283661
+            ],
+            [
+              "class_517",
+              0.038071926683187485
+            ],
+            [
+              "class_645",
+              0.029933620244264603
+            ],
+            [
+              "class_540",
+              0.029466189444065094
+            ],
+            [
+              "class_611",
+              0.027073394507169724
+            ]
+          ],
+          "confidence_reduction": 0.04290194809436798,
+          "confidence_reduction_percentage": 51.01467626042052,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.04290194809436798,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 2.043152422052538,
+          "protected_confidence_entropy": 2.302580014304486,
+          "entropy_increase": 0.259427592251948
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_517",
+            0.13162922859191895
+          ],
+          "protected_top1": [
+            "class_497",
+            0.08516035228967667
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.13162922859191895
+            ],
+            [
+              "class_497",
+              0.05820007249712944
+            ],
+            [
+              "class_718",
+              0.05038581043481827
+            ],
+            [
+              "class_832",
+              0.03929973766207695
+            ],
+            [
+              "class_755",
+              0.03916577249765396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_497",
+              0.08516035228967667
+            ],
+            [
+              "class_832",
+              0.04553595557808876
+            ],
+            [
+              "class_718",
+              0.04222774878144264
+            ],
+            [
+              "class_517",
+              0.03912042826414108
+            ],
+            [
+              "class_908",
+              0.03662179037928581
+            ]
+          ],
+          "confidence_reduction": 0.04646887630224228,
+          "confidence_reduction_percentage": 35.30285545188945,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.04646887630224228,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 2.139681623506762,
+          "protected_confidence_entropy": 2.2390571346081654,
+          "entropy_increase": 0.09937551110140319
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_832",
+            0.24911350011825562
+          ],
+          "protected_top1": [
+            "class_832",
+            0.4365944564342499
+          ],
+          "original_top5": [
+            [
+              "class_832",
+              0.24911350011825562
+            ],
+            [
+              "class_476",
+              0.10467150807380676
+            ],
+            [
+              "class_540",
+              0.041596557945013046
+            ],
+            [
+              "class_517",
+              0.03236094117164612
+            ],
+            [
+              "class_554",
+              0.027070919051766396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_832",
+              0.4365944564342499
+            ],
+            [
+              "class_540",
+              0.045383770018815994
+            ],
+            [
+              "class_554",
+              0.03581983223557472
+            ],
+            [
+              "class_718",
+              0.03439794108271599
+            ],
+            [
+              "class_476",
+              0.023142509162425995
+            ]
+          ],
+          "confidence_reduction": -0.18748095631599426,
+          "confidence_reduction_percentage": -75.25925179767293,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.18748095631599426,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.7926251604732326,
+          "protected_confidence_entropy": 1.2699762267086283,
+          "entropy_increase": -0.5226489337646043
+        }
+      },
+      "quality_metrics": {
+        "psnr": 30.405205535743683,
+        "ssim": 0.9815207615107897,
+        "mse": 59.23246511064693
+      }
+    },
+    {
+      "image_path": "test_images/eiffel.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_eiffel_target_image_poison_medium.jpg",
+      "protection_strength": "medium",
+      "strength_value": 0.15,
+      "protection_time": 14.044606447219849,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "fountain",
+            0.39017054438591003
+          ],
+          "protected_top1": [
+            "stupa",
+            0.7716512680053711
+          ],
+          "original_top5": [
+            [
+              "fountain",
+              0.39017054438591003
+            ],
+            [
+              "stupa",
+              0.31359022855758667
+            ],
+            [
+              "palace",
+              0.04142991080880165
+            ],
+            [
+              "carousel",
+              0.006998792290687561
+            ],
+            [
+              "altar",
+              0.006038660649210215
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.7716512680053711
+            ],
+            [
+              "fountain",
+              0.06059880182147026
+            ],
+            [
+              "palace",
+              0.014636735431849957
+            ],
+            [
+              "church",
+              0.0046274662017822266
+            ],
+            [
+              "altar",
+              0.0037364221643656492
+            ]
+          ],
+          "confidence_reduction": -0.38148072361946106,
+          "confidence_reduction_percentage": -97.77281476229173,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.38148072361946106,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3671189328453448,
+          "protected_confidence_entropy": 0.5799106313138033,
+          "entropy_increase": -0.7872083015315415
+        },
+        "resnet50": {
+          "original_top1": [
+            "drilling_platform",
+            0.48427894711494446
+          ],
+          "protected_top1": [
+            "drilling_platform",
+            0.47779545187950134
+          ],
+          "original_top5": [
+            [
+              "drilling_platform",
+              0.48427894711494446
+            ],
+            [
+              "fountain",
+              0.1503421515226364
+            ],
+            [
+              "fireboat",
+              0.10509125888347626
+            ],
+            [
+              "crane",
+              0.05254104360938072
+            ],
+            [
+              "stupa",
+              0.038327429443597794
+            ]
+          ],
+          "protected_top5": [
+            [
+              "drilling_platform",
+              0.47779545187950134
+            ],
+            [
+              "fountain",
+              0.2735424339771271
+            ],
+            [
+              "stupa",
+              0.055666133761405945
+            ],
+            [
+              "jigsaw_puzzle",
+              0.017782753333449364
+            ],
+            [
+              "fireboat",
+              0.014683139510452747
+            ]
+          ],
+          "confidence_reduction": 0.006483495235443115,
+          "confidence_reduction_percentage": 1.3387935350210973,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.006483495235443115,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.734204649531062,
+          "protected_confidence_entropy": 1.4693923976803678,
+          "entropy_increase": -0.2648122518506941
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "crane",
+            0.31686311960220337
+          ],
+          "protected_top1": [
+            "stupa",
+            0.47904759645462036
+          ],
+          "original_top5": [
+            [
+              "crane",
+              0.31686311960220337
+            ],
+            [
+              "stupa",
+              0.24720193445682526
+            ],
+            [
+              "drilling_platform",
+              0.04390938952565193
+            ],
+            [
+              "pier",
+              0.03127284720540047
+            ],
+            [
+              "obelisk",
+              0.023081142455339432
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.47904759645462036
+            ],
+            [
+              "crane",
+              0.15404506027698517
+            ],
+            [
+              "suspension_bridge",
+              0.03341424837708473
+            ],
+            [
+              "drilling_platform",
+              0.02580520696938038
+            ],
+            [
+              "beacon",
+              0.022411702200770378
+            ]
+          ],
+          "confidence_reduction": -0.162184476852417,
+          "confidence_reduction_percentage": -51.18439692698436,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.162184476852417,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.6758324867243366,
+          "protected_confidence_entropy": 1.4002964666126883,
+          "entropy_increase": -0.27553602011164835
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_517",
+            0.08409726619720459
+          ],
+          "protected_top1": [
+            "class_741",
+            0.042707812041044235
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.08409726619720459
+            ],
+            [
+              "class_540",
+              0.02975849062204361
+            ],
+            [
+              "class_611",
+              0.022027017548680305
+            ],
+            [
+              "class_741",
+              0.021399829536676407
+            ],
+            [
+              "class_562",
+              0.020556408911943436
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_741",
+              0.042707812041044235
+            ],
+            [
+              "class_645",
+              0.0329321026802063
+            ],
+            [
+              "class_611",
+              0.02793831005692482
+            ],
+            [
+              "class_540",
+              0.027846328914165497
+            ],
+            [
+              "class_832",
+              0.022870175540447235
+            ]
+          ],
+          "confidence_reduction": 0.041389454156160355,
+          "confidence_reduction_percentage": 49.21617078384428,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.041389454156160355,
+          "attack_success": true,
+          "top5_success": true,
+          "original_confidence_entropy": 2.043152422052538,
+          "protected_confidence_entropy": 2.28892831632206,
+          "entropy_increase": 0.24577589426952207
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_517",
+            0.13162922859191895
+          ],
+          "protected_top1": [
+            "class_497",
+            0.08219673484563828
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.13162922859191895
+            ],
+            [
+              "class_497",
+              0.05820007249712944
+            ],
+            [
+              "class_718",
+              0.05038581043481827
+            ],
+            [
+              "class_832",
+              0.03929973766207695
+            ],
+            [
+              "class_755",
+              0.03916577249765396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_497",
+              0.08219673484563828
+            ],
+            [
+              "class_832",
+              0.03967225179076195
+            ],
+            [
+              "class_921",
+              0.03914205729961395
+            ],
+            [
+              "class_669",
+              0.0380278155207634
+            ],
+            [
+              "class_645",
+              0.0372469536960125
+            ]
+          ],
+          "confidence_reduction": 0.04943249374628067,
+          "confidence_reduction_percentage": 37.55434433148038,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.04943249374628067,
+          "attack_success": true,
+          "top5_success": true,
+          "original_confidence_entropy": 2.139681623506762,
+          "protected_confidence_entropy": 2.236127581314296,
+          "entropy_increase": 0.09644595780753384
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_832",
+            0.24911350011825562
+          ],
+          "protected_top1": [
+            "class_832",
+            0.5672692060470581
+          ],
+          "original_top5": [
+            [
+              "class_832",
+              0.24911350011825562
+            ],
+            [
+              "class_476",
+              0.10467150807380676
+            ],
+            [
+              "class_540",
+              0.041596557945013046
+            ],
+            [
+              "class_517",
+              0.03236094117164612
+            ],
+            [
+              "class_554",
+              0.027070919051766396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_832",
+              0.5672692060470581
+            ],
+            [
+              "class_718",
+              0.031155800446867943
+            ],
+            [
+              "class_540",
+              0.029159441590309143
+            ],
+            [
+              "class_554",
+              0.024867597967386246
+            ],
+            [
+              "class_628",
+              0.02106340415775776
+            ]
+          ],
+          "confidence_reduction": -0.3181557059288025,
+          "confidence_reduction_percentage": -127.71516026942425,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.3181557059288025,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.7926251604732326,
+          "protected_confidence_entropy": 0.9418934309409756,
+          "entropy_increase": -0.8507317295322571
+        }
+      },
+      "quality_metrics": {
+        "psnr": 27.087218453828974,
+        "ssim": 0.9594277107101347,
+        "mse": 127.16234129506857
+      }
+    },
+    {
+      "image_path": "test_images/eiffel.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_eiffel_target_image_poison_high.jpg",
+      "protection_strength": "high",
+      "strength_value": 0.25,
+      "protection_time": 14.201645374298096,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "fountain",
+            0.39017054438591003
+          ],
+          "protected_top1": [
+            "stupa",
+            0.7408782243728638
+          ],
+          "original_top5": [
+            [
+              "fountain",
+              0.39017054438591003
+            ],
+            [
+              "stupa",
+              0.31359022855758667
+            ],
+            [
+              "palace",
+              0.04142991080880165
+            ],
+            [
+              "carousel",
+              0.006998792290687561
+            ],
+            [
+              "altar",
+              0.006038660649210215
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.7408782243728638
+            ],
+            [
+              "fountain",
+              0.13971616327762604
+            ],
+            [
+              "suspension_bridge",
+              0.007974885404109955
+            ],
+            [
+              "fireboat",
+              0.007304284255951643
+            ],
+            [
+              "palace",
+              0.005978574976325035
+            ]
+          ],
+          "confidence_reduction": -0.35070767998695374,
+          "confidence_reduction_percentage": -89.8857397190075,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.35070767998695374,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3671189328453448,
+          "protected_confidence_entropy": 0.8143912015535345,
+          "entropy_increase": -0.5527277312918103
+        },
+        "resnet50": {
+          "original_top1": [
+            "drilling_platform",
+            0.48427894711494446
+          ],
+          "protected_top1": [
+            "drilling_platform",
+            0.45604270696640015
+          ],
+          "original_top5": [
+            [
+              "drilling_platform",
+              0.48427894711494446
+            ],
+            [
+              "fountain",
+              0.1503421515226364
+            ],
+            [
+              "fireboat",
+              0.10509125888347626
+            ],
+            [
+              "crane",
+              0.05254104360938072
+            ],
+            [
+              "stupa",
+              0.038327429443597794
+            ]
+          ],
+          "protected_top5": [
+            [
+              "drilling_platform",
+              0.45604270696640015
+            ],
+            [
+              "fountain",
+              0.3401036858558655
+            ],
+            [
+              "jigsaw_puzzle",
+              0.03127490356564522
+            ],
+            [
+              "stupa",
+              0.027696246281266212
+            ],
+            [
+              "dome",
+              0.013838083483278751
+            ]
+          ],
+          "confidence_reduction": 0.02823624014854431,
+          "confidence_reduction_percentage": 5.830573539642719,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.02823624014854431,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.734204649531062,
+          "protected_confidence_entropy": 1.4440077721219962,
+          "entropy_increase": -0.29019687740906575
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "crane",
+            0.31686311960220337
+          ],
+          "protected_top1": [
+            "stupa",
+            0.7013015747070312
+          ],
+          "original_top5": [
+            [
+              "crane",
+              0.31686311960220337
+            ],
+            [
+              "stupa",
+              0.24720193445682526
+            ],
+            [
+              "drilling_platform",
+              0.04390938952565193
+            ],
+            [
+              "pier",
+              0.03127284720540047
+            ],
+            [
+              "obelisk",
+              0.023081142455339432
+            ]
+          ],
+          "protected_top5": [
+            [
+              "stupa",
+              0.7013015747070312
+            ],
+            [
+              "crane",
+              0.042424820363521576
+            ],
+            [
+              "suspension_bridge",
+              0.038194868713617325
+            ],
+            [
+              "beacon",
+              0.017278848215937614
+            ],
+            [
+              "drilling_platform",
+              0.012126710265874863
+            ]
+          ],
+          "confidence_reduction": -0.3844384551048279,
+          "confidence_reduction_percentage": -121.32634924110448,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.3844384551048279,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.6758324867243366,
+          "protected_confidence_entropy": 0.8208123912288345,
+          "entropy_increase": -0.8550200954955021
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_517",
+            0.08409726619720459
+          ],
+          "protected_top1": [
+            "class_832",
+            0.13178059458732605
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.08409726619720459
+            ],
+            [
+              "class_540",
+              0.02975849062204361
+            ],
+            [
+              "class_611",
+              0.022027017548680305
+            ],
+            [
+              "class_741",
+              0.021399829536676407
+            ],
+            [
+              "class_562",
+              0.020556408911943436
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_832",
+              0.13178059458732605
+            ],
+            [
+              "class_611",
+              0.043058060109615326
+            ],
+            [
+              "class_645",
+              0.037751685827970505
+            ],
+            [
+              "class_741",
+              0.03357096388936043
+            ],
+            [
+              "class_857",
+              0.019365832209587097
+            ]
+          ],
+          "confidence_reduction": -0.04768332839012146,
+          "confidence_reduction_percentage": -56.700212202268304,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.04768332839012146,
+          "attack_success": true,
+          "top5_success": true,
+          "original_confidence_entropy": 2.043152422052538,
+          "protected_confidence_entropy": 1.980036981444169,
+          "entropy_increase": -0.06311544060836893
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_517",
+            0.13162922859191895
+          ],
+          "protected_top1": [
+            "class_669",
+            0.1070939376950264
+          ],
+          "original_top5": [
+            [
+              "class_517",
+              0.13162922859191895
+            ],
+            [
+              "class_497",
+              0.05820007249712944
+            ],
+            [
+              "class_718",
+              0.05038581043481827
+            ],
+            [
+              "class_832",
+              0.03929973766207695
+            ],
+            [
+              "class_755",
+              0.03916577249765396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_669",
+              0.1070939376950264
+            ],
+            [
+              "class_497",
+              0.08447116613388062
+            ],
+            [
+              "class_921",
+              0.050494372844696045
+            ],
+            [
+              "class_645",
+              0.03682634234428406
+            ],
+            [
+              "class_832",
+              0.03609832003712654
+            ]
+          ],
+          "confidence_reduction": 0.024535290896892548,
+          "confidence_reduction_percentage": 18.639698157737918,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.024535290896892548,
+          "attack_success": true,
+          "top5_success": true,
+          "original_confidence_entropy": 2.139681623506762,
+          "protected_confidence_entropy": 2.1819495085725493,
+          "entropy_increase": 0.04226788506578716
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_832",
+            0.24911350011825562
+          ],
+          "protected_top1": [
+            "class_832",
+            0.4083172678947449
+          ],
+          "original_top5": [
+            [
+              "class_832",
+              0.24911350011825562
+            ],
+            [
+              "class_476",
+              0.10467150807380676
+            ],
+            [
+              "class_540",
+              0.041596557945013046
+            ],
+            [
+              "class_517",
+              0.03236094117164612
+            ],
+            [
+              "class_554",
+              0.027070919051766396
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_832",
+              0.4083172678947449
+            ],
+            [
+              "class_628",
+              0.05948527157306671
+            ],
+            [
+              "class_540",
+              0.053544580936431885
+            ],
+            [
+              "class_645",
+              0.04315623268485069
+            ],
+            [
+              "class_718",
+              0.03180797025561333
+            ]
+          ],
+          "confidence_reduction": -0.15920376777648926,
+          "confidence_reduction_percentage": -63.90812529265347,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.15920376777648926,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.7926251604732326,
+          "protected_confidence_entropy": 1.5178245266012893,
+          "entropy_increase": -0.2748006338719433
+        }
+      },
+      "quality_metrics": {
+        "psnr": 22.802988576623456,
+        "ssim": 0.8871123800185192,
+        "mse": 341.0212980958436
+      }
+    },
+    {
+      "image_path": "test_images/car1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_car1_target_image_poison_low.jpg",
+      "protection_strength": "low",
+      "strength_value": 0.1,
+      "protection_time": 14.66999340057373,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "sports_car",
+            0.8936425447463989
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.9284207224845886
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.8936425447463989
+            ],
+            [
+              "racer",
+              0.02466936595737934
+            ],
+            [
+              "grille",
+              0.01486330758780241
+            ],
+            [
+              "car_wheel",
+              0.00823985505849123
+            ],
+            [
+              "cab",
+              0.0013279548147693276
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.9284207224845886
+            ],
+            [
+              "grille",
+              0.020123198628425598
+            ],
+            [
+              "racer",
+              0.012931911274790764
+            ],
+            [
+              "car_wheel",
+              0.0063176327385008335
+            ],
+            [
+              "piggy_bank",
+              0.001284872298128903
+            ]
+          ],
+          "confidence_reduction": -0.0347781777381897,
+          "confidence_reduction_percentage": -3.8917325436938737,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.0347781777381897,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.3781871570402479,
+          "protected_confidence_entropy": 0.31842666552484294,
+          "entropy_increase": -0.05976049151540497
+        },
+        "resnet50": {
+          "original_top1": [
+            "sports_car",
+            0.7089133262634277
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.7427939176559448
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7089133262634277
+            ],
+            [
+              "racer",
+              0.09222622215747833
+            ],
+            [
+              "car_wheel",
+              0.09119652956724167
+            ],
+            [
+              "cab",
+              0.03994341939687729
+            ],
+            [
+              "grille",
+              0.023114942014217377
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.7427939176559448
+            ],
+            [
+              "racer",
+              0.09634130448102951
+            ],
+            [
+              "lawn_mower",
+              0.06823417544364929
+            ],
+            [
+              "car_wheel",
+              0.028727427124977112
+            ],
+            [
+              "cab",
+              0.01691422238945961
+            ]
+          ],
+          "confidence_reduction": -0.03388059139251709,
+          "confidence_reduction_percentage": -4.779229016768021,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.03388059139251709,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.289901343978634,
+          "protected_confidence_entropy": 1.1423290341902985,
+          "entropy_increase": -0.14757230978833547
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "sports_car",
+            0.7844429612159729
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.7062034606933594
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7844429612159729
+            ],
+            [
+              "racer",
+              0.12431556731462479
+            ],
+            [
+              "grille",
+              0.01966531202197075
+            ],
+            [
+              "convertible",
+              0.01422140933573246
+            ],
+            [
+              "car_wheel",
+              0.008273509331047535
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.7062034606933594
+            ],
+            [
+              "racer",
+              0.14559996128082275
+            ],
+            [
+              "grille",
+              0.019428802654147148
+            ],
+            [
+              "convertible",
+              0.01242639496922493
+            ],
+            [
+              "ashcan",
+              0.008946931920945644
+            ]
+          ],
+          "confidence_reduction": 0.07823950052261353,
+          "confidence_reduction_percentage": 9.973892862947446,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.07823950052261353,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8787338008030622,
+          "protected_confidence_entropy": 0.9666822217011082,
+          "entropy_increase": 0.087948420898046
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_817",
+            0.40287289023399353
+          ],
+          "protected_top1": [
+            "class_817",
+            0.3806680142879486
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.40287289023399353
+            ],
+            [
+              "class_479",
+              0.04122823849320412
+            ],
+            [
+              "class_751",
+              0.04032691940665245
+            ],
+            [
+              "class_581",
+              0.03452024608850479
+            ],
+            [
+              "class_511",
+              0.01862817443907261
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.3806680142879486
+            ],
+            [
+              "class_751",
+              0.07431285828351974
+            ],
+            [
+              "class_479",
+              0.035552456974983215
+            ],
+            [
+              "class_511",
+              0.02708415687084198
+            ],
+            [
+              "class_581",
+              0.019093085080385208
+            ]
+          ],
+          "confidence_reduction": 0.022204875946044922,
+          "confidence_reduction_percentage": 5.511633193573302,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.022204875946044922,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.2987531900139075,
+          "protected_confidence_entropy": 1.3945251703492199,
+          "entropy_increase": 0.09577198033531231
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_817",
+            0.7805284261703491
+          ],
+          "protected_top1": [
+            "class_817",
+            0.7788037657737732
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7805284261703491
+            ],
+            [
+              "class_511",
+              0.11797063797712326
+            ],
+            [
+              "class_479",
+              0.01755520887672901
+            ],
+            [
+              "class_751",
+              0.010699349455535412
+            ],
+            [
+              "class_581",
+              0.008411685936152935
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.7788037657737732
+            ],
+            [
+              "class_511",
+              0.14016202092170715
+            ],
+            [
+              "class_751",
+              0.01542243268340826
+            ],
+            [
+              "class_479",
+              0.010203058831393719
+            ],
+            [
+              "class_581",
+              0.00659919111058116
+            ]
+          ],
+          "confidence_reduction": 0.0017246603965759277,
+          "confidence_reduction_percentage": 0.22096061318842003,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.0017246603965759277,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8370225074448178,
+          "protected_confidence_entropy": 0.8596316720607033,
+          "entropy_increase": 0.02260916461588558
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_817",
+            0.7508940100669861
+          ],
+          "protected_top1": [
+            "class_817",
+            0.6131458878517151
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7508940100669861
+            ],
+            [
+              "class_751",
+              0.08281327039003372
+            ],
+            [
+              "class_408",
+              0.012806538492441177
+            ],
+            [
+              "class_479",
+              0.010036291554570198
+            ],
+            [
+              "class_511",
+              0.010009752586483955
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.6131458878517151
+            ],
+            [
+              "class_408",
+              0.10729990154504776
+            ],
+            [
+              "class_751",
+              0.08355942368507385
+            ],
+            [
+              "class_511",
+              0.021473582834005356
+            ],
+            [
+              "class_581",
+              0.014136671088635921
+            ]
+          ],
+          "confidence_reduction": 0.137748122215271,
+          "confidence_reduction_percentage": 18.344549346316228,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.137748122215271,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.7415111671764434,
+          "protected_confidence_entropy": 1.2762563692035314,
+          "entropy_increase": 0.534745202027088
+        }
+      },
+      "quality_metrics": {
+        "psnr": 26.682605025033507,
+        "ssim": 0.9869639354563692,
+        "mse": 139.5789279513889
+      }
+    },
+    {
+      "image_path": "test_images/car1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_car1_target_image_poison_medium.jpg",
+      "protection_strength": "medium",
+      "strength_value": 0.15,
+      "protection_time": 14.20648980140686,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "sports_car",
+            0.8936425447463989
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.8979774117469788
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.8936425447463989
+            ],
+            [
+              "racer",
+              0.02466936595737934
+            ],
+            [
+              "grille",
+              0.01486330758780241
+            ],
+            [
+              "car_wheel",
+              0.00823985505849123
+            ],
+            [
+              "cab",
+              0.0013279548147693276
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.8979774117469788
+            ],
+            [
+              "grille",
+              0.022834625095129013
+            ],
+            [
+              "racer",
+              0.010692325420677662
+            ],
+            [
+              "car_wheel",
+              0.010179366916418076
+            ],
+            [
+              "piggy_bank",
+              0.0020150679629296064
+            ]
+          ],
+          "confidence_reduction": -0.004334867000579834,
+          "confidence_reduction_percentage": -0.48507840478991493,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.004334867000579834,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.3781871570402479,
+          "protected_confidence_entropy": 0.3607547090618819,
+          "entropy_increase": -0.017432447978366017
+        },
+        "resnet50": {
+          "original_top1": [
+            "sports_car",
+            0.7089133262634277
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.6954818367958069
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7089133262634277
+            ],
+            [
+              "racer",
+              0.09222622215747833
+            ],
+            [
+              "car_wheel",
+              0.09119652956724167
+            ],
+            [
+              "cab",
+              0.03994341939687729
+            ],
+            [
+              "grille",
+              0.023114942014217377
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.6954818367958069
+            ],
+            [
+              "racer",
+              0.1409558653831482
+            ],
+            [
+              "lawn_mower",
+              0.05469057708978653
+            ],
+            [
+              "car_wheel",
+              0.03416008874773979
+            ],
+            [
+              "grille",
+              0.026973959058523178
+            ]
+          ],
+          "confidence_reduction": 0.01343148946762085,
+          "confidence_reduction_percentage": 1.894658905400488,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.01343148946762085,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.289901343978634,
+          "protected_confidence_entropy": 1.293670079560972,
+          "entropy_increase": 0.003768735582337923
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "sports_car",
+            0.7844429612159729
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.7001949548721313
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7844429612159729
+            ],
+            [
+              "racer",
+              0.12431556731462479
+            ],
+            [
+              "grille",
+              0.01966531202197075
+            ],
+            [
+              "convertible",
+              0.01422140933573246
+            ],
+            [
+              "car_wheel",
+              0.008273509331047535
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.7001949548721313
+            ],
+            [
+              "racer",
+              0.12397380918264389
+            ],
+            [
+              "grille",
+              0.018974125385284424
+            ],
+            [
+              "ashcan",
+              0.011959374882280827
+            ],
+            [
+              "convertible",
+              0.010606372728943825
+            ]
+          ],
+          "confidence_reduction": 0.08424800634384155,
+          "confidence_reduction_percentage": 10.73985114395671,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.08424800634384155,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8787338008030622,
+          "protected_confidence_entropy": 0.9330766936560069,
+          "entropy_increase": 0.05434289285294469
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_817",
+            0.40287289023399353
+          ],
+          "protected_top1": [
+            "class_817",
+            0.38832706212997437
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.40287289023399353
+            ],
+            [
+              "class_479",
+              0.04122823849320412
+            ],
+            [
+              "class_751",
+              0.04032691940665245
+            ],
+            [
+              "class_581",
+              0.03452024608850479
+            ],
+            [
+              "class_511",
+              0.01862817443907261
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.38832706212997437
+            ],
+            [
+              "class_751",
+              0.08545049279928207
+            ],
+            [
+              "class_479",
+              0.03121756948530674
+            ],
+            [
+              "class_511",
+              0.02785399556159973
+            ],
+            [
+              "class_581",
+              0.01883222907781601
+            ]
+          ],
+          "confidence_reduction": 0.014545828104019165,
+          "confidence_reduction_percentage": 3.610525417972594,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.014545828104019165,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.2987531900139075,
+          "protected_confidence_entropy": 1.3916210932680488,
+          "entropy_increase": 0.09286790325414129
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_817",
+            0.7805284261703491
+          ],
+          "protected_top1": [
+            "class_817",
+            0.7684499025344849
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7805284261703491
+            ],
+            [
+              "class_511",
+              0.11797063797712326
+            ],
+            [
+              "class_479",
+              0.01755520887672901
+            ],
+            [
+              "class_751",
+              0.010699349455535412
+            ],
+            [
+              "class_581",
+              0.008411685936152935
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.7684499025344849
+            ],
+            [
+              "class_511",
+              0.13482606410980225
+            ],
+            [
+              "class_751",
+              0.022925959900021553
+            ],
+            [
+              "class_479",
+              0.01116634439677
+            ],
+            [
+              "class_408",
+              0.008839183486998081
+            ]
+          ],
+          "confidence_reduction": 0.012078523635864258,
+          "confidence_reduction_percentage": 1.5474803006377809,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.012078523635864258,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8370225074448178,
+          "protected_confidence_entropy": 0.9129676249110581,
+          "entropy_increase": 0.07594511746624033
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_817",
+            0.7508940100669861
+          ],
+          "protected_top1": [
+            "class_817",
+            0.6271134614944458
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7508940100669861
+            ],
+            [
+              "class_751",
+              0.08281327039003372
+            ],
+            [
+              "class_408",
+              0.012806538492441177
+            ],
+            [
+              "class_479",
+              0.010036291554570198
+            ],
+            [
+              "class_511",
+              0.010009752586483955
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.6271134614944458
+            ],
+            [
+              "class_751",
+              0.08479081094264984
+            ],
+            [
+              "class_408",
+              0.05408383905887604
+            ],
+            [
+              "class_511",
+              0.03169431537389755
+            ],
+            [
+              "class_581",
+              0.020004229620099068
+            ]
+          ],
+          "confidence_reduction": 0.12378054857254028,
+          "confidence_reduction_percentage": 16.48442348894194,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.12378054857254028,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.7415111671764434,
+          "protected_confidence_entropy": 1.2045276406625833,
+          "entropy_increase": 0.46301647348613995
+        }
+      },
+      "quality_metrics": {
+        "psnr": 23.66720534317027,
+        "ssim": 0.9732585612436704,
+        "mse": 279.4858509837963
+      }
+    },
+    {
+      "image_path": "test_images/car1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_car1_target_image_poison_high.jpg",
+      "protection_strength": "high",
+      "strength_value": 0.25,
+      "protection_time": 14.091897249221802,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "sports_car",
+            0.8936425447463989
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.8907749056816101
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.8936425447463989
+            ],
+            [
+              "racer",
+              0.02466936595737934
+            ],
+            [
+              "grille",
+              0.01486330758780241
+            ],
+            [
+              "car_wheel",
+              0.00823985505849123
+            ],
+            [
+              "cab",
+              0.0013279548147693276
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.8907749056816101
+            ],
+            [
+              "car_wheel",
+              0.028161073103547096
+            ],
+            [
+              "grille",
+              0.016754938289523125
+            ],
+            [
+              "racer",
+              0.012694860808551311
+            ],
+            [
+              "ashcan",
+              0.003437719540670514
+            ]
+          ],
+          "confidence_reduction": 0.0028676390647888184,
+          "confidence_reduction_percentage": 0.3208933014265348,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.0028676390647888184,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.3781871570402479,
+          "protected_confidence_entropy": 0.4547300755462116,
+          "entropy_increase": 0.07654291850596368
+        },
+        "resnet50": {
+          "original_top1": [
+            "sports_car",
+            0.7089133262634277
+          ],
+          "protected_top1": [
+            "racer",
+            0.34486740827560425
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7089133262634277
+            ],
+            [
+              "racer",
+              0.09222622215747833
+            ],
+            [
+              "car_wheel",
+              0.09119652956724167
+            ],
+            [
+              "cab",
+              0.03994341939687729
+            ],
+            [
+              "grille",
+              0.023114942014217377
+            ]
+          ],
+          "protected_top5": [
+            [
+              "racer",
+              0.34486740827560425
+            ],
+            [
+              "sports_car",
+              0.33374446630477905
+            ],
+            [
+              "lawn_mower",
+              0.1087682843208313
+            ],
+            [
+              "minivan",
+              0.04929754137992859
+            ],
+            [
+              "grille",
+              0.03750963509082794
+            ]
+          ],
+          "confidence_reduction": 0.3640459179878235,
+          "confidence_reduction_percentage": 51.35266957198464,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.3640459179878235,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.289901343978634,
+          "protected_confidence_entropy": 1.8626927101095958,
+          "entropy_increase": 0.5727913661309618
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "sports_car",
+            0.7844429612159729
+          ],
+          "protected_top1": [
+            "sports_car",
+            0.6320682168006897
+          ],
+          "original_top5": [
+            [
+              "sports_car",
+              0.7844429612159729
+            ],
+            [
+              "racer",
+              0.12431556731462479
+            ],
+            [
+              "grille",
+              0.01966531202197075
+            ],
+            [
+              "convertible",
+              0.01422140933573246
+            ],
+            [
+              "car_wheel",
+              0.008273509331047535
+            ]
+          ],
+          "protected_top5": [
+            [
+              "sports_car",
+              0.6320682168006897
+            ],
+            [
+              "racer",
+              0.05524309352040291
+            ],
+            [
+              "amphibian",
+              0.03528402000665665
+            ],
+            [
+              "grille",
+              0.024793844670057297
+            ],
+            [
+              "convertible",
+              0.019668860360980034
+            ]
+          ],
+          "confidence_reduction": 0.1523747444152832,
+          "confidence_reduction_percentage": 19.424579217217474,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.1523747444152832,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8787338008030622,
+          "protected_confidence_entropy": 1.0033667440681477,
+          "entropy_increase": 0.12463294326508556
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_817",
+            0.40287289023399353
+          ],
+          "protected_top1": [
+            "class_817",
+            0.32833606004714966
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.40287289023399353
+            ],
+            [
+              "class_479",
+              0.04122823849320412
+            ],
+            [
+              "class_751",
+              0.04032691940665245
+            ],
+            [
+              "class_581",
+              0.03452024608850479
+            ],
+            [
+              "class_511",
+              0.01862817443907261
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.32833606004714966
+            ],
+            [
+              "class_751",
+              0.15721340477466583
+            ],
+            [
+              "class_479",
+              0.0265906173735857
+            ],
+            [
+              "class_511",
+              0.02080526016652584
+            ],
+            [
+              "class_581",
+              0.016139212995767593
+            ]
+          ],
+          "confidence_reduction": 0.07453683018684387,
+          "confidence_reduction_percentage": 18.501326843698013,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.07453683018684387,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.2987531900139075,
+          "protected_confidence_entropy": 1.5002290362724149,
+          "entropy_increase": 0.20147584625850734
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_817",
+            0.7805284261703491
+          ],
+          "protected_top1": [
+            "class_817",
+            0.5895315408706665
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7805284261703491
+            ],
+            [
+              "class_511",
+              0.11797063797712326
+            ],
+            [
+              "class_479",
+              0.01755520887672901
+            ],
+            [
+              "class_751",
+              0.010699349455535412
+            ],
+            [
+              "class_581",
+              0.008411685936152935
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.5895315408706665
+            ],
+            [
+              "class_511",
+              0.1488219052553177
+            ],
+            [
+              "class_751",
+              0.04734816774725914
+            ],
+            [
+              "class_408",
+              0.02850860171020031
+            ],
+            [
+              "class_479",
+              0.014135465025901794
+            ]
+          ],
+          "confidence_reduction": 0.19099688529968262,
+          "confidence_reduction_percentage": 24.470202352117518,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.19099688529968262,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.8370225074448178,
+          "protected_confidence_entropy": 1.29767512396102,
+          "entropy_increase": 0.46065261651620226
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_817",
+            0.7508940100669861
+          ],
+          "protected_top1": [
+            "class_817",
+            0.5524064302444458
+          ],
+          "original_top5": [
+            [
+              "class_817",
+              0.7508940100669861
+            ],
+            [
+              "class_751",
+              0.08281327039003372
+            ],
+            [
+              "class_408",
+              0.012806538492441177
+            ],
+            [
+              "class_479",
+              0.010036291554570198
+            ],
+            [
+              "class_511",
+              0.010009752586483955
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_817",
+              0.5524064302444458
+            ],
+            [
+              "class_751",
+              0.08653134107589722
+            ],
+            [
+              "class_511",
+              0.049048684537410736
+            ],
+            [
+              "class_408",
+              0.04552331566810608
+            ],
+            [
+              "class_581",
+              0.02286456525325775
+            ]
+          ],
+          "confidence_reduction": 0.19848757982254028,
+          "confidence_reduction_percentage": 26.433501554345,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.19848757982254028,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.7415111671764434,
+          "protected_confidence_entropy": 1.3414959218965796,
+          "entropy_increase": 0.5999847547201362
+        }
+      },
+      "quality_metrics": {
+        "psnr": 19.70292738973705,
+        "ssim": 0.930269708498493,
+        "mse": 696.2859340277778
+      }
+    },
+    {
+      "image_path": "test_images/cat1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat1_target_image_poison_low.jpg",
+      "protection_strength": "low",
+      "strength_value": 0.1,
+      "protection_time": 14.43369436264038,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.44955888390541077
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.38511142134666443
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.44955888390541077
+            ],
+            [
+              "tiger_cat",
+              0.33335816860198975
+            ],
+            [
+              "tabby",
+              0.11558473110198975
+            ],
+            [
+              "plastic_bag",
+              0.0030052131041884422
+            ],
+            [
+              "carton",
+              0.002204073127359152
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.38511142134666443
+            ],
+            [
+              "Egyptian_cat",
+              0.3814736306667328
+            ],
+            [
+              "tabby",
+              0.13833218812942505
+            ],
+            [
+              "carton",
+              0.005978503730148077
+            ],
+            [
+              "shower_curtain",
+              0.002055469434708357
+            ]
+          ],
+          "confidence_reduction": 0.06444746255874634,
+          "confidence_reduction_percentage": 14.33571104164997,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.06444746255874634,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.459864074204034,
+          "protected_confidence_entropy": 1.5311525336847915,
+          "entropy_increase": 0.07128845948075746
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.62176513671875
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.6651867628097534
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.62176513671875
+            ],
+            [
+              "tabby",
+              0.187318354845047
+            ],
+            [
+              "Egyptian_cat",
+              0.17527742683887482
+            ],
+            [
+              "window_screen",
+              0.005384054500609636
+            ],
+            [
+              "plastic_bag",
+              0.0011255431454628706
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.6651867628097534
+            ],
+            [
+              "tabby",
+              0.26541513204574585
+            ],
+            [
+              "Egyptian_cat",
+              0.054842542856931686
+            ],
+            [
+              "window_screen",
+              0.003478662809357047
+            ],
+            [
+              "carton",
+              0.0015474014217033982
+            ]
+          ],
+          "confidence_reduction": -0.04342162609100342,
+          "confidence_reduction_percentage": -6.983605790468244,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.04342162609100342,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3702503446640761,
+          "protected_confidence_entropy": 1.1691891676614237,
+          "entropy_increase": -0.20106117700265247
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.4640485346317291
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.3487923741340637
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.4640485346317291
+            ],
+            [
+              "tiger_cat",
+              0.27669915556907654
+            ],
+            [
+              "tabby",
+              0.1342475712299347
+            ],
+            [
+              "lynx",
+              0.010670545510947704
+            ],
+            [
+              "Siamese_cat",
+              0.005740930791944265
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.3487923741340637
+            ],
+            [
+              "Egyptian_cat",
+              0.3098161220550537
+            ],
+            [
+              "tabby",
+              0.1466284841299057
+            ],
+            [
+              "lynx",
+              0.01577933505177498
+            ],
+            [
+              "Siamese_cat",
+              0.011192175559699535
+            ]
+          ],
+          "confidence_reduction": 0.1152561604976654,
+          "confidence_reduction_percentage": 24.837091790222583,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.1152561604976654,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5488041028993527,
+          "protected_confidence_entropy": 1.6899102304325564,
+          "entropy_increase": 0.14110612753320373
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.31549009680747986
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3037540912628174
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.31549009680747986
+            ],
+            [
+              "class_281",
+              0.15802623331546783
+            ],
+            [
+              "class_285",
+              0.046590983867645264
+            ],
+            [
+              "class_283",
+              0.005466521251946688
+            ],
+            [
+              "class_287",
+              0.00378786725923419
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3037540912628174
+            ],
+            [
+              "class_281",
+              0.14512982964515686
+            ],
+            [
+              "class_285",
+              0.029717767611145973
+            ],
+            [
+              "class_283",
+              0.007939198985695839
+            ],
+            [
+              "class_478",
+              0.004385967273265123
+            ]
+          ],
+          "confidence_reduction": 0.011736005544662476,
+          "confidence_reduction_percentage": 3.7199283474891724,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.011736005544662476,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3933572646392969,
+          "protected_confidence_entropy": 1.3502600424846376,
+          "entropy_increase": -0.043097222154659276
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.42780423164367676
+          ],
+          "protected_top1": [
+            "class_282",
+            0.507175087928772
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.42780423164367676
+            ],
+            [
+              "class_281",
+              0.31285518407821655
+            ],
+            [
+              "class_285",
+              0.1743953675031662
+            ],
+            [
+              "class_287",
+              0.006957460194826126
+            ],
+            [
+              "class_673",
+              0.0015024874592199922
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.507175087928772
+            ],
+            [
+              "class_281",
+              0.2681125998497009
+            ],
+            [
+              "class_285",
+              0.15014323592185974
+            ],
+            [
+              "class_287",
+              0.007333468180149794
+            ],
+            [
+              "class_673",
+              0.0014330517733469605
+            ]
+          ],
+          "confidence_reduction": -0.07937085628509521,
+          "confidence_reduction_percentage": -18.553078818351697,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.07937085628509521,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5656225474531411,
+          "protected_confidence_entropy": 1.488392141102129,
+          "entropy_increase": -0.07723040635101208
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.38323384523391724
+          ],
+          "protected_top1": [
+            "class_282",
+            0.4141855537891388
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.38323384523391724
+            ],
+            [
+              "class_281",
+              0.28080105781555176
+            ],
+            [
+              "class_285",
+              0.20416978001594543
+            ],
+            [
+              "class_622",
+              0.0009491099626757205
+            ],
+            [
+              "class_283",
+              0.0009242367232218385
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.4141855537891388
+            ],
+            [
+              "class_281",
+              0.28880488872528076
+            ],
+            [
+              "class_285",
+              0.1519976556301117
+            ],
+            [
+              "class_620",
+              0.001845628721639514
+            ],
+            [
+              "class_760",
+              0.001622627372853458
+            ]
+          ],
+          "confidence_reduction": -0.030951708555221558,
+          "confidence_reduction_percentage": -8.076454869566476,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.030951708555221558,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.559577797843099,
+          "protected_confidence_entropy": 1.514441608650337,
+          "entropy_increase": -0.045136189192761966
+        }
+      },
+      "quality_metrics": {
+        "psnr": 28.720924726364586,
+        "ssim": 0.9881724756018517,
+        "mse": 87.29470229723394
+      }
+    },
+    {
+      "image_path": "test_images/cat1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat1_target_image_poison_medium.jpg",
+      "protection_strength": "medium",
+      "strength_value": 0.15,
+      "protection_time": 14.30496859550476,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.44955888390541077
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.49101412296295166
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.44955888390541077
+            ],
+            [
+              "tiger_cat",
+              0.33335816860198975
+            ],
+            [
+              "tabby",
+              0.11558473110198975
+            ],
+            [
+              "plastic_bag",
+              0.0030052131041884422
+            ],
+            [
+              "carton",
+              0.002204073127359152
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.49101412296295166
+            ],
+            [
+              "Egyptian_cat",
+              0.25118616223335266
+            ],
+            [
+              "tabby",
+              0.1231805756688118
+            ],
+            [
+              "carton",
+              0.006625305861234665
+            ],
+            [
+              "shower_curtain",
+              0.003438112558797002
+            ]
+          ],
+          "confidence_reduction": -0.041455239057540894,
+          "confidence_reduction_percentage": -9.221314613429653,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.041455239057540894,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.459864074204034,
+          "protected_confidence_entropy": 1.4675371622367,
+          "entropy_increase": 0.007673088032665865
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.62176513671875
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.6868845820426941
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.62176513671875
+            ],
+            [
+              "tabby",
+              0.187318354845047
+            ],
+            [
+              "Egyptian_cat",
+              0.17527742683887482
+            ],
+            [
+              "window_screen",
+              0.005384054500609636
+            ],
+            [
+              "plastic_bag",
+              0.0011255431454628706
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.6868845820426941
+            ],
+            [
+              "tabby",
+              0.2610115110874176
+            ],
+            [
+              "Egyptian_cat",
+              0.03257804363965988
+            ],
+            [
+              "window_screen",
+              0.006276980508118868
+            ],
+            [
+              "carton",
+              0.002010875381529331
+            ]
+          ],
+          "confidence_reduction": -0.06511944532394409,
+          "confidence_reduction_percentage": -10.473318859207815,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.06511944532394409,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3702503446640761,
+          "protected_confidence_entropy": 1.099085483156731,
+          "entropy_increase": -0.2711648615073452
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.4640485346317291
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.33920201659202576
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.4640485346317291
+            ],
+            [
+              "tiger_cat",
+              0.27669915556907654
+            ],
+            [
+              "tabby",
+              0.1342475712299347
+            ],
+            [
+              "lynx",
+              0.010670545510947704
+            ],
+            [
+              "Siamese_cat",
+              0.005740930791944265
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.33920201659202576
+            ],
+            [
+              "Egyptian_cat",
+              0.276239812374115
+            ],
+            [
+              "tabby",
+              0.17389017343521118
+            ],
+            [
+              "lynx",
+              0.016211669892072678
+            ],
+            [
+              "Siamese_cat",
+              0.011654756031930447
+            ]
+          ],
+          "confidence_reduction": 0.12484651803970337,
+          "confidence_reduction_percentage": 26.903763016681452,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.12484651803970337,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5488041028993527,
+          "protected_confidence_entropy": 1.7301841056127243,
+          "entropy_increase": 0.18138000271337162
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.31549009680747986
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3173377513885498
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.31549009680747986
+            ],
+            [
+              "class_281",
+              0.15802623331546783
+            ],
+            [
+              "class_285",
+              0.046590983867645264
+            ],
+            [
+              "class_283",
+              0.005466521251946688
+            ],
+            [
+              "class_287",
+              0.00378786725923419
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3173377513885498
+            ],
+            [
+              "class_281",
+              0.17207540571689606
+            ],
+            [
+              "class_285",
+              0.028289467096328735
+            ],
+            [
+              "class_283",
+              0.00918840616941452
+            ],
+            [
+              "class_478",
+              0.005340047646313906
+            ]
+          ],
+          "confidence_reduction": -0.0018476545810699463,
+          "confidence_reduction_percentage": -0.5856458252626017,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.0018476545810699463,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3933572646392969,
+          "protected_confidence_entropy": 1.3642347151623497,
+          "entropy_increase": -0.029122549476947146
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.42780423164367676
+          ],
+          "protected_top1": [
+            "class_282",
+            0.5147369503974915
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.42780423164367676
+            ],
+            [
+              "class_281",
+              0.31285518407821655
+            ],
+            [
+              "class_285",
+              0.1743953675031662
+            ],
+            [
+              "class_287",
+              0.006957460194826126
+            ],
+            [
+              "class_673",
+              0.0015024874592199922
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.5147369503974915
+            ],
+            [
+              "class_281",
+              0.272522509098053
+            ],
+            [
+              "class_285",
+              0.13880717754364014
+            ],
+            [
+              "class_287",
+              0.009895477443933487
+            ],
+            [
+              "class_673",
+              0.0010686595924198627
+            ]
+          ],
+          "confidence_reduction": -0.0869327187538147,
+          "confidence_reduction_percentage": -20.320677619248514,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.0869327187538147,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5656225474531411,
+          "protected_confidence_entropy": 1.4815468087648982,
+          "entropy_increase": -0.08407573868824292
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.38323384523391724
+          ],
+          "protected_top1": [
+            "class_282",
+            0.44755101203918457
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.38323384523391724
+            ],
+            [
+              "class_281",
+              0.28080105781555176
+            ],
+            [
+              "class_285",
+              0.20416978001594543
+            ],
+            [
+              "class_622",
+              0.0009491099626757205
+            ],
+            [
+              "class_283",
+              0.0009242367232218385
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.44755101203918457
+            ],
+            [
+              "class_281",
+              0.30001625418663025
+            ],
+            [
+              "class_285",
+              0.09310748428106308
+            ],
+            [
+              "class_760",
+              0.004097807686775923
+            ],
+            [
+              "class_620",
+              0.0040091900154948235
+            ]
+          ],
+          "confidence_reduction": -0.06431716680526733,
+          "confidence_reduction_percentage": -16.782747036867164,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.06431716680526733,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.559577797843099,
+          "protected_confidence_entropy": 1.4405868357792875,
+          "entropy_increase": -0.11899096206381143
+        }
+      },
+      "quality_metrics": {
+        "psnr": 25.43769027419995,
+        "ssim": 0.9736263440290226,
+        "mse": 185.9136740115643
+      }
+    },
+    {
+      "image_path": "test_images/cat1.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat1_target_image_poison_high.jpg",
+      "protection_strength": "high",
+      "strength_value": 0.25,
+      "protection_time": 14.311322689056396,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.44955888390541077
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.5573175549507141
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.44955888390541077
+            ],
+            [
+              "tiger_cat",
+              0.33335816860198975
+            ],
+            [
+              "tabby",
+              0.11558473110198975
+            ],
+            [
+              "plastic_bag",
+              0.0030052131041884422
+            ],
+            [
+              "carton",
+              0.002204073127359152
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.5573175549507141
+            ],
+            [
+              "tabby",
+              0.17910759150981903
+            ],
+            [
+              "Egyptian_cat",
+              0.08023087680339813
+            ],
+            [
+              "carton",
+              0.006163303274661303
+            ],
+            [
+              "shower_curtain",
+              0.00600263150408864
+            ]
+          ],
+          "confidence_reduction": -0.10775867104530334,
+          "confidence_reduction_percentage": -23.96986799797649,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.10775867104530334,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.459864074204034,
+          "protected_confidence_entropy": 1.2928111845104333,
+          "entropy_increase": -0.16705288969360077
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.62176513671875
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.6960097551345825
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.62176513671875
+            ],
+            [
+              "tabby",
+              0.187318354845047
+            ],
+            [
+              "Egyptian_cat",
+              0.17527742683887482
+            ],
+            [
+              "window_screen",
+              0.005384054500609636
+            ],
+            [
+              "plastic_bag",
+              0.0011255431454628706
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.6960097551345825
+            ],
+            [
+              "tabby",
+              0.22673343122005463
+            ],
+            [
+              "Egyptian_cat",
+              0.0387532040476799
+            ],
+            [
+              "window_screen",
+              0.01694045402109623
+            ],
+            [
+              "lynx",
+              0.003761091735213995
+            ]
+          ],
+          "confidence_reduction": -0.07424461841583252,
+          "confidence_reduction_percentage": -11.940942653627172,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.07424461841583252,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3702503446640761,
+          "protected_confidence_entropy": 1.1561335538909123,
+          "entropy_increase": -0.2141167907731638
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.4640485346317291
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.303943395614624
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.4640485346317291
+            ],
+            [
+              "tiger_cat",
+              0.27669915556907654
+            ],
+            [
+              "tabby",
+              0.1342475712299347
+            ],
+            [
+              "lynx",
+              0.010670545510947704
+            ],
+            [
+              "Siamese_cat",
+              0.005740930791944265
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.303943395614624
+            ],
+            [
+              "Egyptian_cat",
+              0.27568361163139343
+            ],
+            [
+              "tabby",
+              0.17963984608650208
+            ],
+            [
+              "lynx",
+              0.015614593401551247
+            ],
+            [
+              "window_screen",
+              0.010709602385759354
+            ]
+          ],
+          "confidence_reduction": 0.1601051390171051,
+          "confidence_reduction_percentage": 34.50180898516687,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.1601051390171051,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5488041028993527,
+          "protected_confidence_entropy": 1.7438004636160456,
+          "entropy_increase": 0.1949963607166929
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.31549009680747986
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3249170482158661
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.31549009680747986
+            ],
+            [
+              "class_281",
+              0.15802623331546783
+            ],
+            [
+              "class_285",
+              0.046590983867645264
+            ],
+            [
+              "class_283",
+              0.005466521251946688
+            ],
+            [
+              "class_287",
+              0.00378786725923419
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3249170482158661
+            ],
+            [
+              "class_281",
+              0.15821433067321777
+            ],
+            [
+              "class_285",
+              0.035313889384269714
+            ],
+            [
+              "class_478",
+              0.009389642626047134
+            ],
+            [
+              "class_283",
+              0.008523098193109035
+            ]
+          ],
+          "confidence_reduction": -0.00942695140838623,
+          "confidence_reduction_percentage": -2.98803401557761,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.00942695140838623,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3933572646392969,
+          "protected_confidence_entropy": 1.4131478341146053,
+          "entropy_increase": 0.01979056947530844
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.42780423164367676
+          ],
+          "protected_top1": [
+            "class_282",
+            0.5079185962677002
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.42780423164367676
+            ],
+            [
+              "class_281",
+              0.31285518407821655
+            ],
+            [
+              "class_285",
+              0.1743953675031662
+            ],
+            [
+              "class_287",
+              0.006957460194826126
+            ],
+            [
+              "class_673",
+              0.0015024874592199922
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.5079185962677002
+            ],
+            [
+              "class_281",
+              0.26276063919067383
+            ],
+            [
+              "class_285",
+              0.1526615470647812
+            ],
+            [
+              "class_287",
+              0.017354818060994148
+            ],
+            [
+              "class_728",
+              0.0009407150209881365
+            ]
+          ],
+          "confidence_reduction": -0.08011436462402344,
+          "confidence_reduction_percentage": -18.72687521491177,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.08011436462402344,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5656225474531411,
+          "protected_confidence_entropy": 1.5359146825929244,
+          "entropy_increase": -0.029707864860216704
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.38323384523391724
+          ],
+          "protected_top1": [
+            "class_282",
+            0.4323754608631134
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.38323384523391724
+            ],
+            [
+              "class_281",
+              0.28080105781555176
+            ],
+            [
+              "class_285",
+              0.20416978001594543
+            ],
+            [
+              "class_622",
+              0.0009491099626757205
+            ],
+            [
+              "class_283",
+              0.0009242367232218385
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.4323754608631134
+            ],
+            [
+              "class_281",
+              0.3282262086868286
+            ],
+            [
+              "class_285",
+              0.05597996339201927
+            ],
+            [
+              "class_760",
+              0.00437616091221571
+            ],
+            [
+              "class_620",
+              0.002729046856984496
+            ]
+          ],
+          "confidence_reduction": -0.04914161562919617,
+          "confidence_reduction_percentage": -12.822879878785558,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.04914161562919617,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.559577797843099,
+          "protected_confidence_entropy": 1.3481066294424726,
+          "entropy_increase": -0.2114711684006263
+        }
+      },
+      "quality_metrics": {
+        "psnr": 21.219243751033584,
+        "ssim": 0.9243675483700706,
+        "mse": 491.0842274462528
+      }
+    },
+    {
+      "image_path": "test_images/cat2.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat2_target_image_poison_low.jpg",
+      "protection_strength": "low",
+      "strength_value": 0.1,
+      "protection_time": 14.19978141784668,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.5529576539993286
+          ],
+          "protected_top1": [
+            "Egyptian_cat",
+            0.5128003358840942
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.5529576539993286
+            ],
+            [
+              "tiger_cat",
+              0.2801884114742279
+            ],
+            [
+              "tabby",
+              0.04406402260065079
+            ],
+            [
+              "lynx",
+              0.015417014248669147
+            ],
+            [
+              "Siamese_cat",
+              0.005246723536401987
+            ]
+          ],
+          "protected_top5": [
+            [
+              "Egyptian_cat",
+              0.5128003358840942
+            ],
+            [
+              "tiger_cat",
+              0.26320168375968933
+            ],
+            [
+              "tabby",
+              0.04094938561320305
+            ],
+            [
+              "window_screen",
+              0.002733980305492878
+            ],
+            [
+              "Siamese_cat",
+              0.0022937937173992395
+            ]
+          ],
+          "confidence_reduction": 0.040157318115234375,
+          "confidence_reduction_percentage": 7.262277287382142,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.040157318115234375,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3124483212642826,
+          "protected_confidence_entropy": 1.2173707205890902,
+          "entropy_increase": -0.09507760067519233
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.5986363291740417
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.45046475529670715
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5986363291740417
+            ],
+            [
+              "Egyptian_cat",
+              0.1896989941596985
+            ],
+            [
+              "tabby",
+              0.16326476633548737
+            ],
+            [
+              "lynx",
+              0.027850978076457977
+            ],
+            [
+              "Siamese_cat",
+              0.00366441928781569
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.45046475529670715
+            ],
+            [
+              "tabby",
+              0.2864620089530945
+            ],
+            [
+              "Egyptian_cat",
+              0.16640609502792358
+            ],
+            [
+              "window_screen",
+              0.03467646986246109
+            ],
+            [
+              "lynx",
+              0.0167416799813509
+            ]
+          ],
+          "confidence_reduction": 0.1481715738773346,
+          "confidence_reduction_percentage": 24.751517182689494,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.1481715738773346,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4996732466616978,
+          "protected_confidence_entropy": 1.7477152460159815,
+          "entropy_increase": 0.24804199935428373
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "tiger_cat",
+            0.5515630841255188
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.4971444606781006
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5515630841255188
+            ],
+            [
+              "Egyptian_cat",
+              0.23764368891716003
+            ],
+            [
+              "tabby",
+              0.08648306876420975
+            ],
+            [
+              "lynx",
+              0.015652041882276535
+            ],
+            [
+              "Siamese_cat",
+              0.006246193777769804
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.4971444606781006
+            ],
+            [
+              "Egyptian_cat",
+              0.2136707603931427
+            ],
+            [
+              "tabby",
+              0.12588801980018616
+            ],
+            [
+              "Siamese_cat",
+              0.031825754791498184
+            ],
+            [
+              "lynx",
+              0.008943374268710613
+            ]
+          ],
+          "confidence_reduction": 0.05441862344741821,
+          "confidence_reduction_percentage": 9.866255558726662,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.05441862344741821,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4162845139568165,
+          "protected_confidence_entropy": 1.603535363962791,
+          "entropy_increase": 0.1872508500059744
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.30738818645477295
+          ],
+          "protected_top1": [
+            "class_282",
+            0.30206188559532166
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.30738818645477295
+            ],
+            [
+              "class_281",
+              0.12255875766277313
+            ],
+            [
+              "class_285",
+              0.0604281947016716
+            ],
+            [
+              "class_904",
+              0.01508029643446207
+            ],
+            [
+              "class_283",
+              0.014699628576636314
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.30206188559532166
+            ],
+            [
+              "class_281",
+              0.1641456037759781
+            ],
+            [
+              "class_285",
+              0.04362517222762108
+            ],
+            [
+              "class_904",
+              0.013842311687767506
+            ],
+            [
+              "class_283",
+              0.012164056301116943
+            ]
+          ],
+          "confidence_reduction": 0.005326300859451294,
+          "confidence_reduction_percentage": 1.7327604293715986,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.005326300859451294,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5941323564940324,
+          "protected_confidence_entropy": 1.5438635569121273,
+          "entropy_increase": -0.05026879958190511
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.5699504613876343
+          ],
+          "protected_top1": [
+            "class_282",
+            0.43745046854019165
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.5699504613876343
+            ],
+            [
+              "class_285",
+              0.18967889249324799
+            ],
+            [
+              "class_281",
+              0.16475532948970795
+            ],
+            [
+              "class_287",
+              0.00657518720254302
+            ],
+            [
+              "class_283",
+              0.00264592282474041
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.43745046854019165
+            ],
+            [
+              "class_285",
+              0.2583767771720886
+            ],
+            [
+              "class_281",
+              0.16447503864765167
+            ],
+            [
+              "class_287",
+              0.02608787640929222
+            ],
+            [
+              "class_284",
+              0.007613400928676128
+            ]
+          ],
+          "confidence_reduction": 0.13249999284744263,
+          "confidence_reduction_percentage": 23.247633228482787,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.13249999284744263,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4177421811374158,
+          "protected_confidence_entropy": 1.6788122376886132,
+          "entropy_increase": 0.2610700565511974
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.7221782803535461
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3935271203517914
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.7221782803535461
+            ],
+            [
+              "class_285",
+              0.11075406521558762
+            ],
+            [
+              "class_281",
+              0.0777718648314476
+            ],
+            [
+              "class_622",
+              0.000934308220166713
+            ],
+            [
+              "class_283",
+              0.000712845241650939
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3935271203517914
+            ],
+            [
+              "class_281",
+              0.23548704385757446
+            ],
+            [
+              "class_285",
+              0.18754372000694275
+            ],
+            [
+              "class_876",
+              0.007706242147833109
+            ],
+            [
+              "class_760",
+              0.0026037839706987143
+            ]
+          ],
+          "confidence_reduction": 0.32865116000175476,
+          "confidence_reduction_percentage": 45.508314074588604,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.32865116000175476,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.9572915677894402,
+          "protected_confidence_entropy": 1.60037029290722,
+          "entropy_increase": 0.6430787251177799
+        }
+      },
+      "quality_metrics": {
+        "psnr": 28.282827688696486,
+        "ssim": 0.9821169797928726,
+        "mse": 96.56007446289063
+      }
+    },
+    {
+      "image_path": "test_images/cat2.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat2_target_image_poison_medium.jpg",
+      "protection_strength": "medium",
+      "strength_value": 0.15,
+      "protection_time": 14.433937788009644,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.5529576539993286
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.4394248127937317
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.5529576539993286
+            ],
+            [
+              "tiger_cat",
+              0.2801884114742279
+            ],
+            [
+              "tabby",
+              0.04406402260065079
+            ],
+            [
+              "lynx",
+              0.015417014248669147
+            ],
+            [
+              "Siamese_cat",
+              0.005246723536401987
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.4394248127937317
+            ],
+            [
+              "Egyptian_cat",
+              0.22666175663471222
+            ],
+            [
+              "tabby",
+              0.06731394678354263
+            ],
+            [
+              "window_screen",
+              0.01089595165103674
+            ],
+            [
+              "plastic_bag",
+              0.004510977305471897
+            ]
+          ],
+          "confidence_reduction": 0.11353284120559692,
+          "confidence_reduction_percentage": 20.531923264730644,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.11353284120559692,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3124483212642826,
+          "protected_confidence_entropy": 1.418797805248085,
+          "entropy_increase": 0.1063494839838024
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.5986363291740417
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.5021755695343018
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5986363291740417
+            ],
+            [
+              "Egyptian_cat",
+              0.1896989941596985
+            ],
+            [
+              "tabby",
+              0.16326476633548737
+            ],
+            [
+              "lynx",
+              0.027850978076457977
+            ],
+            [
+              "Siamese_cat",
+              0.00366441928781569
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.5021755695343018
+            ],
+            [
+              "tabby",
+              0.32516902685165405
+            ],
+            [
+              "Egyptian_cat",
+              0.08852951228618622
+            ],
+            [
+              "window_screen",
+              0.03369982913136482
+            ],
+            [
+              "lynx",
+              0.010835142806172371
+            ]
+          ],
+          "confidence_reduction": 0.09646075963973999,
+          "confidence_reduction_percentage": 16.113415597885627,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.09646075963973999,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4996732466616978,
+          "protected_confidence_entropy": 1.5777492801312747,
+          "entropy_increase": 0.07807603346957692
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "tiger_cat",
+            0.5515630841255188
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.4740791618824005
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5515630841255188
+            ],
+            [
+              "Egyptian_cat",
+              0.23764368891716003
+            ],
+            [
+              "tabby",
+              0.08648306876420975
+            ],
+            [
+              "lynx",
+              0.015652041882276535
+            ],
+            [
+              "Siamese_cat",
+              0.006246193777769804
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.4740791618824005
+            ],
+            [
+              "Egyptian_cat",
+              0.226590096950531
+            ],
+            [
+              "tabby",
+              0.14461921155452728
+            ],
+            [
+              "Siamese_cat",
+              0.03246288746595383
+            ],
+            [
+              "lynx",
+              0.00812752265483141
+            ]
+          ],
+          "confidence_reduction": 0.07748392224311829,
+          "confidence_reduction_percentage": 14.048061676565238,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.07748392224311829,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4162845139568165,
+          "protected_confidence_entropy": 1.6495943231032162,
+          "entropy_increase": 0.23330980914639965
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.30738818645477295
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3206471800804138
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.30738818645477295
+            ],
+            [
+              "class_281",
+              0.12255875766277313
+            ],
+            [
+              "class_285",
+              0.0604281947016716
+            ],
+            [
+              "class_904",
+              0.01508029643446207
+            ],
+            [
+              "class_283",
+              0.014699628576636314
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3206471800804138
+            ],
+            [
+              "class_281",
+              0.15295171737670898
+            ],
+            [
+              "class_285",
+              0.04400423914194107
+            ],
+            [
+              "class_904",
+              0.014292370527982712
+            ],
+            [
+              "class_478",
+              0.009497617371380329
+            ]
+          ],
+          "confidence_reduction": -0.01325899362564087,
+          "confidence_reduction_percentage": -4.313436302989382,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.01325899362564087,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5941323564940324,
+          "protected_confidence_entropy": 1.4978203143815991,
+          "entropy_increase": -0.09631204211243327
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.5699504613876343
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3777458369731903
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.5699504613876343
+            ],
+            [
+              "class_285",
+              0.18967889249324799
+            ],
+            [
+              "class_281",
+              0.16475532948970795
+            ],
+            [
+              "class_287",
+              0.00657518720254302
+            ],
+            [
+              "class_283",
+              0.00264592282474041
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3777458369731903
+            ],
+            [
+              "class_285",
+              0.27001169323921204
+            ],
+            [
+              "class_281",
+              0.15035925805568695
+            ],
+            [
+              "class_287",
+              0.04293994978070259
+            ],
+            [
+              "class_284",
+              0.015311630442738533
+            ]
+          ],
+          "confidence_reduction": 0.19220462441444397,
+          "confidence_reduction_percentage": 33.72304041065104,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.19220462441444397,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4177421811374158,
+          "protected_confidence_entropy": 1.8068726220813265,
+          "entropy_increase": 0.3891304409439107
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.7221782803535461
+          ],
+          "protected_top1": [
+            "class_282",
+            0.41712701320648193
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.7221782803535461
+            ],
+            [
+              "class_285",
+              0.11075406521558762
+            ],
+            [
+              "class_281",
+              0.0777718648314476
+            ],
+            [
+              "class_622",
+              0.000934308220166713
+            ],
+            [
+              "class_283",
+              0.000712845241650939
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.41712701320648193
+            ],
+            [
+              "class_281",
+              0.24255472421646118
+            ],
+            [
+              "class_285",
+              0.14711926877498627
+            ],
+            [
+              "class_876",
+              0.00782548263669014
+            ],
+            [
+              "class_435",
+              0.0027762993704527617
+            ]
+          ],
+          "confidence_reduction": 0.3050512671470642,
+          "confidence_reduction_percentage": 42.2404377763514,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.3050512671470642,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.9572915677894402,
+          "protected_confidence_entropy": 1.5527442194722285,
+          "entropy_increase": 0.5954526516827883
+        }
+      },
+      "quality_metrics": {
+        "psnr": 24.93791224551542,
+        "ssim": 0.9594209732477169,
+        "mse": 208.58791178385417
+      }
+    },
+    {
+      "image_path": "test_images/cat2.jpg",
+      "target_image": "target_images/target_image.jpg",
+      "method": "poison",
+      "protected_path": "test_results/protected_cat2_target_image_poison_high.jpg",
+      "protection_strength": "high",
+      "strength_value": 0.25,
+      "protection_time": 14.376268148422241,
+      "models": {
+        "inception_v3": {
+          "original_top1": [
+            "Egyptian_cat",
+            0.5529576539993286
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.6907141804695129
+          ],
+          "original_top5": [
+            [
+              "Egyptian_cat",
+              0.5529576539993286
+            ],
+            [
+              "tiger_cat",
+              0.2801884114742279
+            ],
+            [
+              "tabby",
+              0.04406402260065079
+            ],
+            [
+              "lynx",
+              0.015417014248669147
+            ],
+            [
+              "Siamese_cat",
+              0.005246723536401987
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.6907141804695129
+            ],
+            [
+              "tabby",
+              0.09511533379554749
+            ],
+            [
+              "Egyptian_cat",
+              0.051063694059848785
+            ],
+            [
+              "window_screen",
+              0.011885164305567741
+            ],
+            [
+              "Persian_cat",
+              0.00288715329952538
+            ]
+          ],
+          "confidence_reduction": -0.13775652647018433,
+          "confidence_reduction_percentage": -24.91267196933521,
+          "confidence_reduced": false,
+          "max_confidence_reduction": -0.13775652647018433,
+          "attack_success": true,
+          "top5_success": false,
+          "original_confidence_entropy": 1.3124483212642826,
+          "protected_confidence_entropy": 0.9555267537769012,
+          "entropy_increase": -0.35692156748738135
+        },
+        "resnet50": {
+          "original_top1": [
+            "tiger_cat",
+            0.5986363291740417
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.4374590516090393
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5986363291740417
+            ],
+            [
+              "Egyptian_cat",
+              0.1896989941596985
+            ],
+            [
+              "tabby",
+              0.16326476633548737
+            ],
+            [
+              "lynx",
+              0.027850978076457977
+            ],
+            [
+              "Siamese_cat",
+              0.00366441928781569
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.4374590516090393
+            ],
+            [
+              "tabby",
+              0.36803334951400757
+            ],
+            [
+              "Egyptian_cat",
+              0.11101562529802322
+            ],
+            [
+              "lynx",
+              0.020374460145831108
+            ],
+            [
+              "window_screen",
+              0.017620354890823364
+            ]
+          ],
+          "confidence_reduction": 0.16117727756500244,
+          "confidence_reduction_percentage": 26.924072213823713,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.16117727756500244,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4996732466616978,
+          "protected_confidence_entropy": 1.6318120636857605,
+          "entropy_increase": 0.13213881702406272
+        },
+        "efficientnet_b0": {
+          "original_top1": [
+            "tiger_cat",
+            0.5515630841255188
+          ],
+          "protected_top1": [
+            "tiger_cat",
+            0.3813363015651703
+          ],
+          "original_top5": [
+            [
+              "tiger_cat",
+              0.5515630841255188
+            ],
+            [
+              "Egyptian_cat",
+              0.23764368891716003
+            ],
+            [
+              "tabby",
+              0.08648306876420975
+            ],
+            [
+              "lynx",
+              0.015652041882276535
+            ],
+            [
+              "Siamese_cat",
+              0.006246193777769804
+            ]
+          ],
+          "protected_top5": [
+            [
+              "tiger_cat",
+              0.3813363015651703
+            ],
+            [
+              "Egyptian_cat",
+              0.25802862644195557
+            ],
+            [
+              "tabby",
+              0.1293555051088333
+            ],
+            [
+              "Siamese_cat",
+              0.025890860706567764
+            ],
+            [
+              "red_fox",
+              0.022509433329105377
+            ]
+          ],
+          "confidence_reduction": 0.1702267825603485,
+          "confidence_reduction_percentage": 30.862613445248293,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.1702267825603485,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4162845139568165,
+          "protected_confidence_entropy": 1.759768375728234,
+          "entropy_increase": 0.34348386177141754
+        },
+        "pytorch_resnet50": {
+          "original_top1": [
+            "class_282",
+            0.30738818645477295
+          ],
+          "protected_top1": [
+            "class_282",
+            0.2669859528541565
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.30738818645477295
+            ],
+            [
+              "class_281",
+              0.12255875766277313
+            ],
+            [
+              "class_285",
+              0.0604281947016716
+            ],
+            [
+              "class_904",
+              0.01508029643446207
+            ],
+            [
+              "class_283",
+              0.014699628576636314
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.2669859528541565
+            ],
+            [
+              "class_281",
+              0.09823466092348099
+            ],
+            [
+              "class_285",
+              0.06671116501092911
+            ],
+            [
+              "class_904",
+              0.014541301876306534
+            ],
+            [
+              "class_478",
+              0.010707670822739601
+            ]
+          ],
+          "confidence_reduction": 0.040402233600616455,
+          "confidence_reduction_percentage": 13.143717091600385,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.040402233600616455,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.5941323564940324,
+          "protected_confidence_entropy": 1.6201069997261752,
+          "entropy_increase": 0.025974643232142824
+        },
+        "pytorch_efficientnet": {
+          "original_top1": [
+            "class_282",
+            0.5699504613876343
+          ],
+          "protected_top1": [
+            "class_282",
+            0.3499065637588501
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.5699504613876343
+            ],
+            [
+              "class_285",
+              0.18967889249324799
+            ],
+            [
+              "class_281",
+              0.16475532948970795
+            ],
+            [
+              "class_287",
+              0.00657518720254302
+            ],
+            [
+              "class_283",
+              0.00264592282474041
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.3499065637588501
+            ],
+            [
+              "class_285",
+              0.2867218852043152
+            ],
+            [
+              "class_281",
+              0.11025571078062057
+            ],
+            [
+              "class_287",
+              0.040906872600317
+            ],
+            [
+              "class_284",
+              0.027300497516989708
+            ]
+          ],
+          "confidence_reduction": 0.22004389762878418,
+          "confidence_reduction_percentage": 38.607547942509356,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.22004389762878418,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 1.4177421811374158,
+          "protected_confidence_entropy": 1.825095561993818,
+          "entropy_increase": 0.40735338085640227
+        },
+        "pytorch_vit": {
+          "original_top1": [
+            "class_282",
+            0.7221782803535461
+          ],
+          "protected_top1": [
+            "class_282",
+            0.4590274393558502
+          ],
+          "original_top5": [
+            [
+              "class_282",
+              0.7221782803535461
+            ],
+            [
+              "class_285",
+              0.11075406521558762
+            ],
+            [
+              "class_281",
+              0.0777718648314476
+            ],
+            [
+              "class_622",
+              0.000934308220166713
+            ],
+            [
+              "class_283",
+              0.000712845241650939
+            ]
+          ],
+          "protected_top5": [
+            [
+              "class_282",
+              0.4590274393558502
+            ],
+            [
+              "class_281",
+              0.1807398647069931
+            ],
+            [
+              "class_285",
+              0.13405661284923553
+            ],
+            [
+              "class_283",
+              0.006578174419701099
+            ],
+            [
+              "class_876",
+              0.0029007813427597284
+            ]
+          ],
+          "confidence_reduction": 0.2631508409976959,
+          "confidence_reduction_percentage": 36.438487303837086,
+          "confidence_reduced": true,
+          "max_confidence_reduction": 0.2631508409976959,
+          "attack_success": false,
+          "top5_success": false,
+          "original_confidence_entropy": 0.9572915677894402,
+          "protected_confidence_entropy": 1.463655349878873,
+          "entropy_increase": 0.5063637820894327
+        }
+      },
+      "quality_metrics": {
+        "psnr": 20.745429441110552,
+        "ssim": 0.8862879910010255,
+        "mse": 547.6932855902778
+      }
+    }
+  ]
+}

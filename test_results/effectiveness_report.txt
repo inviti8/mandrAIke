@@ -1,0 +1,101 @@
+MandrAIk Confidence Reduction Effectiveness Report
+============================================================
+
+Total Tests: 12
+Successful Protections: 12
+Protection Success Rate: 100.00%
+
+Results by Model (Confidence Reduction Focus):
+--------------------------------------------------
+inception_v3:
+  Confidence Reduction Success Rate: 41.67%
+  Avg Confidence Reduction: -0.069
+  Avg Confidence Reduction %: -17.1%
+  Avg Max Confidence Reduction: -0.069
+  Avg Entropy Increase: -0.155
+  Attack Success Rate: 66.67%
+  Avg PSNR: 24.97
+
+resnet50:
+  Confidence Reduction Success Rate: 58.33%
+  Avg Confidence Reduction: 0.041
+  Avg Confidence Reduction %: 6.0%
+  Avg Max Confidence Reduction: 0.041
+  Avg Entropy Increase: -0.068
+  Attack Success Rate: 8.33%
+  Avg PSNR: 24.97
+
+efficientnet_b0:
+  Confidence Reduction Success Rate: 75.00%
+  Avg Confidence Reduction: 0.038
+  Avg Confidence Reduction %: 0.3%
+  Avg Max Confidence Reduction: 0.038
+  Avg Entropy Increase: 0.027
+  Attack Success Rate: 50.00%
+  Avg PSNR: 24.97
+
+pytorch_resnet50:
+  Confidence Reduction Success Rate: 66.67%
+  Avg Confidence Reduction: 0.015
+  Avg Confidence Reduction %: 6.8%
+  Avg Max Confidence Reduction: 0.015
+  Avg Entropy Increase: 0.055
+  Attack Success Rate: 25.00%
+  Avg PSNR: 24.97
+
+pytorch_efficientnet:
+  Confidence Reduction Success Rate: 75.00%
+  Avg Confidence Reduction: 0.052
+  Avg Confidence Reduction %: 13.0%
+  Avg Max Confidence Reduction: 0.052
+  Avg Entropy Increase: 0.139
+  Attack Success Rate: 25.00%
+  Avg PSNR: 24.97
+
+pytorch_vit:
+  Confidence Reduction Success Rate: 50.00%
+  Avg Confidence Reduction: 0.046
+  Avg Confidence Reduction %: -9.9%
+  Avg Max Confidence Reduction: 0.046
+  Avg Entropy Increase: 0.110
+  Attack Success Rate: 0.00%
+  Avg PSNR: 24.97
+
+Results by Protection Method (Confidence Reduction Focus):
+-------------------------------------------------------
+poison:
+  Confidence Reduction Success Rate: 61.11%
+  Avg Confidence Reduction: 0.020
+  Attack Success Rate: 75.00%
+  Avg PSNR: 24.97
+
+Results by Protection Strength (Confidence Reduction Focus):
+-------------------------------------------------------
+low:
+  Confidence Reduction Success Rate: 66.67%
+  Avg Confidence Reduction: 0.029
+  Attack Success Rate: 50.00%
+
+medium:
+  Confidence Reduction Success Rate: 58.33%
+  Avg Confidence Reduction: 0.005
+  Attack Success Rate: 75.00%
+
+high:
+  Confidence Reduction Success Rate: 58.33%
+  Avg Confidence Reduction: 0.027
+  Attack Success Rate: 100.00%
+
+Results by Target Image (Confidence Reduction Focus):
+---------------------------------------------
+target_image.jpg:
+  Confidence Reduction Success Rate: 61.11%
+  Avg Confidence Reduction: 0.020
+  Attack Success Rate: 75.00%
+
+Key Insights:
+---------------
+Best Confidence Reduction Success: efficientnet_b0 (75.00%)
+Best Avg Confidence Reduction: pytorch_efficientnet (0.052)
+Best Target for Confidence Reduction: target_image.jpg (61.11%)
+Best Protection Strength: low (66.67%)

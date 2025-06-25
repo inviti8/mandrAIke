@@ -18,8 +18,12 @@ def main():
                        default=['low', 'medium', 'high'],
                        choices=['low', 'medium', 'high'],
                        help='Protection strengths to test (default: all)')
+    parser.add_argument('--methods', '-m', nargs='+',
+                       default=['poison', 'hallucinogen'],
+                       choices=['poison', 'hallucinogen'],
+                       help='Protection methods to test (default: all)')
     parser.add_argument('--quick', '-q', action='store_true',
-                       help='Quick test with only low strength')
+                       help='Quick test with only low strength and poison method')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Verbose output')
     
@@ -28,13 +32,15 @@ def main():
     # Quick test mode
     if args.quick:
         args.strengths = ['low']
-        print("Running quick test with low protection strength only...")
+        args.methods = ['poison']
+        print("Running quick test with low protection strength and poison method only...")
     
     print("MandrAIk Effectiveness Test Runner")
     print("=" * 40)
     print(f"Test images: {args.test_images}")
     print(f"Output directory: {args.output_dir}")
     print(f"Protection strengths: {', '.join(args.strengths)}")
+    print(f"Protection methods: {', '.join(args.methods)}")
     print()
     
     # Check if test images directory exists
@@ -51,38 +57,27 @@ def main():
             output_dir=args.output_dir
         )
         
-        results = tester.run_comprehensive_test(args.strengths)
+        results = tester.run_comprehensive_test(args.strengths, args.methods)
         
         if results:
             print("\n" + "=" * 40)
             print("TEST COMPLETED SUCCESSFULLY!")
             print("=" * 40)
             
-            # Print summary
-            for strength, strength_results in results.items():
+            # Print summary by method
+            for method, method_results in results.get('by_method', {}).items():
+                print(f"\nProtection Method: {method.upper()}")
+                print(f"  Confidence Reduction Success Rate: {method_results['confidence_reduction_success_rate']:.1%}")
+                print(f"  Average Confidence Reduction: {method_results['avg_confidence_reduction']:.3f}")
+                print(f"  Attack Success Rate: {method_results['attack_success_rate']:.1%}")
+                print(f"  Average PSNR: {method_results['avg_psnr']:.1f} dB")
+            
+            # Print summary by strength
+            for strength, strength_results in results.get('by_strength', {}).items():
                 print(f"\nProtection Strength: {strength.upper()}")
-                
-                # Find best performing model
-                best_model = None
-                best_rate = 0
-                
-                for model_name, model_results in strength_results.items():
-                    if model_name in ['quality', 'processing_time']:
-                        continue
-                    
-                    attack_rate = model_results['attack_success_rate']
-                    if attack_rate > best_rate:
-                        best_rate = attack_rate
-                        best_model = model_name
-                
-                if best_model:
-                    print(f"  Best attack success rate: {best_rate:.1%} ({best_model})")
-                
-                # Print quality metrics if available
-                if 'quality' in strength_results:
-                    quality = strength_results['quality']
-                    print(f"  Average PSNR: {quality['avg_psnr']:.1f} dB")
-                    print(f"  Average SSIM: {quality['avg_ssim']:.3f}")
+                print(f"  Confidence Reduction Success Rate: {strength_results['confidence_reduction_success_rate']:.1%}")
+                print(f"  Average Confidence Reduction: {strength_results['avg_confidence_reduction']:.3f}")
+                print(f"  Attack Success Rate: {strength_results['attack_success_rate']:.1%}")
             
             print(f"\nDetailed results saved to: {args.output_dir}")
             print("Files generated:")

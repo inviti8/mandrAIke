@@ -10,6 +10,7 @@ Uses modern standards:
 - Standard adversarial attack evaluation metrics
 - Real-world image categories
 - Comprehensive statistical analysis
+- Target-based perturbation using images from target_images folder
 """
 
 import os
@@ -24,6 +25,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
 import cv2
+import random
 
 # Deep Learning imports
 import tensorflow as tf
@@ -49,72 +51,96 @@ class ModernImageClassifier:
         self.preprocess = None
         self.class_names = None
         self.framework = None
+        self.input_size = None
         self._load_model()
     
     def _load_model(self):
         """Load the specified model."""
-        if self.model_name == 'inception_v3':
-            self.model = tf.keras.applications.InceptionV3(
-                weights='imagenet',
-                include_top=True
-            )
-            self.preprocess = tf.keras.applications.inception_v3.preprocess_input
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'tensorflow'
-            
-        elif self.model_name == 'resnet50':
-            self.model = tf.keras.applications.ResNet50(
-                weights='imagenet',
-                include_top=True
-            )
-            self.preprocess = tf.keras.applications.resnet50.preprocess_input
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'tensorflow'
-            
-        elif self.model_name == 'efficientnet_b0':
-            self.model = tf.keras.applications.EfficientNetB0(
-                weights='imagenet',
-                include_top=True
-            )
-            self.preprocess = tf.keras.applications.efficientnet.preprocess_input
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'tensorflow'
-            
-        elif self.model_name == 'pytorch_resnet50':
-            self.model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
-            self.model.eval()
-            self.preprocess = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'pytorch'
-            
-        elif self.model_name == 'pytorch_efficientnet':
-            self.model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
-            self.model.eval()
-            self.preprocess = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'pytorch'
-            
-        elif self.model_name == 'pytorch_vit':
-            self.model = vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
-            self.model.eval()
-            self.preprocess = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            self.class_names = self._get_imagenet_class_names()
-            self.framework = 'pytorch'
+        try:
+            if self.model_name == 'inception_v3':
+                self.model = tf.keras.applications.InceptionV3(
+                    weights='imagenet',
+                    include_top=True
+                )
+                self.preprocess = tf.keras.applications.inception_v3.preprocess_input
+                self.class_names = self._get_imagenet_class_names()
+                self.framework = 'tensorflow'
+                self.input_size = (299, 299)
+                
+            elif self.model_name == 'resnet50':
+                self.model = tf.keras.applications.ResNet50(
+                    weights='imagenet',
+                    include_top=True
+                )
+                self.preprocess = tf.keras.applications.resnet50.preprocess_input
+                self.class_names = self._get_imagenet_class_names()
+                self.framework = 'tensorflow'
+                self.input_size = (224, 224)
+                
+            elif self.model_name == 'efficientnet_b0':
+                self.model = tf.keras.applications.EfficientNetB0(
+                    weights='imagenet',
+                    include_top=True
+                )
+                self.preprocess = tf.keras.applications.efficientnet.preprocess_input
+                self.class_names = self._get_imagenet_class_names()
+                self.framework = 'tensorflow'
+                self.input_size = (224, 224)
+                
+            elif self.model_name == 'pytorch_resnet50':
+                self.model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+                self.model.eval()
+                self.preprocess = transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                ])
+                self.class_names = self._get_imagenet_class_names()
+                self.framework = 'pytorch'
+                self.input_size = (224, 224)
+                
+            elif self.model_name == 'pytorch_efficientnet':
+                self.model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
+                self.model.eval()
+                self.preprocess = transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                ])
+                self.class_names = self._get_imagenet_class_names()
+                self.framework = 'pytorch'
+                self.input_size = (224, 224)
+                
+            elif self.model_name == 'pytorch_vit':
+                try:
+                    self.model = vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+                    self.model.eval()
+                    self.preprocess = transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                    self.class_names = self._get_imagenet_class_names()
+                    self.framework = 'pytorch'
+                    self.input_size = (224, 224)
+                except Exception as e:
+                    print(f"Warning: Could not load Vision Transformer model: {e}")
+                    print("Falling back to ResNet50...")
+                    # Fallback to ResNet50
+                    self.model_name = 'pytorch_resnet50'
+                    self._load_model()
+                    return
+                    
+        except Exception as e:
+            print(f"Warning: Could not load model {self.model_name}: {e}")
+            # Fallback to InceptionV3 if available
+            if self.model_name != 'inception_v3':
+                print("Falling back to InceptionV3...")
+                self.model_name = 'inception_v3'
+                self._load_model()
     
     def _get_imagenet_class_names(self) -> List[str]:
         """Get ImageNet class names."""
@@ -140,7 +166,7 @@ class ModernImageClassifier:
     
     def _predict_tensorflow(self, image_path: str, top_k: int) -> List[Tuple[str, float]]:
         """TensorFlow prediction."""
-        img = tf.keras.preprocessing.image.load_img(image_path, target_size=(299, 299))
+        img = tf.keras.preprocessing.image.load_img(image_path, target_size=self.input_size)
         x = tf.keras.preprocessing.image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         x = self.preprocess(x)
@@ -172,99 +198,97 @@ class ModernImageClassifier:
 class MandrAIkEffectivenessTester:
     """Comprehensive effectiveness tester for MandrAIk."""
     
-    def __init__(self, test_images_dir: str = "test_images", output_dir: str = "test_results"):
+    def __init__(self, test_images_dir: str = "test_images", output_dir: str = "test_results", target_images_dir: str = "target_images"):
         self.test_images_dir = Path(test_images_dir)
         self.output_dir = Path(output_dir)
+        self.target_images_dir = Path(target_images_dir)
         self.output_dir.mkdir(exist_ok=True)
         
-        # Initialize MandrAIk instances with different parameters
-        self.mandrAIk_instances = {
-            'low': MandrAIk(step_size=0.3, num_ocataves=2),
-            'medium': MandrAIk(step_size=0.5, num_ocataves=3),
-            'high': MandrAIk(step_size=0.7, num_ocataves=4)
+        # Load target images for perturbation
+        self.target_images = self._load_target_images()
+        
+        # Initialize models
+        self.models = {
+            'inception_v3': ModernImageClassifier('inception_v3'),
+            'resnet50': ModernImageClassifier('resnet50'),
+            'efficientnet_b0': ModernImageClassifier('efficientnet_b0'),
+            'pytorch_resnet50': ModernImageClassifier('pytorch_resnet50'),
+            'pytorch_efficientnet': ModernImageClassifier('pytorch_efficientnet'),
+            'pytorch_vit': ModernImageClassifier('pytorch_vit')
         }
         
-        # Modern classification models
-        self.classifiers = {
-            'InceptionV3': ModernImageClassifier('inception_v3'),
-            'ResNet50': ModernImageClassifier('resnet50'),
-            'EfficientNetB0': ModernImageClassifier('efficientnet_b0'),
-            'PyTorch_ResNet50': ModernImageClassifier('pytorch_resnet50'),
-            'PyTorch_EfficientNet': ModernImageClassifier('pytorch_efficientnet'),
-            'PyTorch_ViT': ModernImageClassifier('pytorch_vit')
-        }
+        # Remove failed models
+        self.models = {k: v for k, v in self.models.items() if v.model is not None}
         
-        # Test results storage
-        self.results = {
-            'attack_success_rate': {},
-            'confidence_drop': {},
-            'top1_accuracy': {},
-            'top5_accuracy': {},
-            'processing_time': {},
-            'image_quality': {}
-        }
+        print(f"Loaded {len(self.models)} models: {list(self.models.keys())}")
+        print(f"Loaded {len(self.target_images)} target images: {[p.name for p in self.target_images]}")
+    
+    def _load_target_images(self) -> List[Path]:
+        """Load target images from target_images directory."""
+        target_images = []
+        if self.target_images_dir.exists():
+            # Load both target_image.jpg and target_image2.jpg for comprehensive testing
+            target_files = ["target_image.jpg", "target_image2.jpg"]
+            for target_file in target_files:
+                target_path = self.target_images_dir / target_file
+                if target_path.exists():
+                    target_images.append(target_path)
+                    print(f"Loaded target image: {target_file}")
+                else:
+                    print(f"Warning: Target image {target_file} not found")
+        
+        if not target_images:
+            print("Warning: No target images found in target_images directory")
+        
+        return target_images
     
     def load_test_images(self) -> List[Path]:
-        """Load test images from directory."""
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
-        images = []
+        """Load test images from the test directory."""
+        test_images = []
         
         if self.test_images_dir.exists():
-            for ext in image_extensions:
-                images.extend(self.test_images_dir.glob(f"*{ext}"))
-                images.extend(self.test_images_dir.glob(f"*{ext.upper()}"))
+            # Load existing test images
+            for ext in ['*.jpg', '*.jpeg', '*.png']:
+                test_images.extend(self.test_images_dir.glob(ext))
         
-        if not images:
+        if not test_images:
             print("No test images found. Creating sample images...")
-            images = self._create_sample_images()
+            test_images = self._create_sample_images()
         
-        print(f"Loaded {len(images)} test images")
-        return images
+        return test_images
     
     def _create_sample_images(self) -> List[Path]:
-        """Create realistic sample images for testing."""
+        """Create sample test images if none exist."""
+        self.test_images_dir.mkdir(exist_ok=True)
+        
+        # Create sample images with different characteristics
         sample_images = []
         
-        # Create different types of realistic images
-        image_types = [
-            ('portrait', (512, 512), (100, 150, 200)),  # Blue-tinted portrait
-            ('landscape', (800, 600), (50, 100, 50)),   # Green landscape
-            ('artwork', (600, 600), (200, 100, 150)),   # Purple artwork
-            ('photography', (640, 480), (150, 150, 150)) # Gray photography
-        ]
+        # Create a simple geometric pattern
+        img1 = np.zeros((224, 224, 3), dtype=np.uint8)
+        img1[50:150, 50:150] = [255, 0, 0]  # Red square
+        img1_path = self.test_images_dir / "sample_red_square.jpg"
+        Image.fromarray(img1).save(img1_path)
+        sample_images.append(img1_path)
         
-        for img_type, size, color in image_types:
-            img_path = self.test_images_dir / f"sample_{img_type}.jpg"
-            
-            # Create realistic image with texture
-            img = np.random.randint(0, 255, (*size, 3), dtype=np.uint8)
-            
-            # Add some structure based on type
-            if img_type == 'portrait':
-                # Add face-like structure
-                center_y, center_x = size[0]//2, size[1]//2
-                for y in range(size[0]):
-                    for x in range(size[1]):
-                        dist = np.sqrt((y-center_y)**2 + (x-center_x)**2)
-                        if dist < 100:
-                            img[y, x] = [200, 180, 160]  # Skin tone
-                        else:
-                            img[y, x] = color
-            
-            elif img_type == 'landscape':
-                # Add horizon line
-                horizon = size[0] // 2
-                img[:horizon] = [100, 150, 255]  # Sky
-                img[horizon:] = [34, 139, 34]    # Ground
-            
-            # Add some noise for realism
-            noise = np.random.randint(-20, 20, img.shape, dtype=np.int16)
-            img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-            
-            # Save image
-            Image.fromarray(img).save(img_path)
-            sample_images.append(img_path)
+        # Create a gradient
+        img2 = np.zeros((224, 224, 3), dtype=np.uint8)
+        for i in range(224):
+            intensity = int(255 * i / 224)
+            img2[i, :] = [intensity, intensity, intensity]
+        img2_path = self.test_images_dir / "sample_gradient.jpg"
+        Image.fromarray(img2).save(img2_path)
+        sample_images.append(img2_path)
         
+        # Create a striped pattern
+        img3 = np.zeros((224, 224, 3), dtype=np.uint8)
+        for i in range(0, 224, 20):
+            img3[i:i+10, :] = [0, 255, 0]  # Green stripes
+        img3_path = self.test_images_dir / "sample_stripes.jpg"
+        Image.fromarray(img3).save(img3_path)
+        sample_images.append(img3_path)
+        
+        print(f"Created {len(sample_images)} sample test images")
         return sample_images
     
     def calculate_image_quality(self, original_path: Path, protected_path: Path) -> Dict[str, float]:
@@ -274,193 +298,415 @@ class MandrAIkEffectivenessTester:
             protected = cv2.imread(str(protected_path))
             
             if original is None or protected is None:
-                return {'psnr': 0.0, 'ssim': 0.0}
+                return {"psnr": 0.0, "ssim": 0.0, "mse": float('inf')}
             
             # Ensure same size
             if original.shape != protected.shape:
                 protected = cv2.resize(protected, (original.shape[1], original.shape[0]))
             
-            # Calculate PSNR
+            # Convert to grayscale for SSIM
+            original_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+            protected_gray = cv2.cvtColor(protected, cv2.COLOR_BGR2GRAY)
+            
+            # Calculate MSE
             mse = np.mean((original.astype(np.float64) - protected.astype(np.float64)) ** 2)
-            psnr = 20 * np.log10(255.0 / np.sqrt(mse)) if mse > 0 else 100.0
+            
+            # Calculate PSNR
+            if mse == 0:
+                psnr = float('inf')
+            else:
+                psnr = 20 * np.log10(255.0 / np.sqrt(mse))
             
             # Calculate SSIM (simplified)
-            mu1 = np.mean(original)
-            mu2 = np.mean(protected)
-            sigma1 = np.std(original)
-            sigma2 = np.std(protected)
-            sigma12 = np.mean((original - mu1) * (protected - mu2))
+            mu_x = np.mean(original_gray)
+            mu_y = np.mean(protected_gray)
+            sigma_x = np.std(original_gray)
+            sigma_y = np.std(protected_gray)
+            sigma_xy = np.mean((original_gray - mu_x) * (protected_gray - mu_y))
             
             c1 = (0.01 * 255) ** 2
             c2 = (0.03 * 255) ** 2
             
-            ssim = ((2 * mu1 * mu2 + c1) * (2 * sigma12 + c2)) / \
-                   ((mu1 ** 2 + mu2 ** 2 + c1) * (sigma1 ** 2 + sigma2 ** 2 + c2))
+            ssim = ((2 * mu_x * mu_y + c1) * (2 * sigma_xy + c2)) / \
+                   ((mu_x ** 2 + mu_y ** 2 + c1) * (sigma_x ** 2 + sigma_y ** 2 + c2))
             
-            return {'psnr': float(psnr), 'ssim': float(ssim)}
-            
+            return {
+                "psnr": float(psnr),
+                "ssim": float(ssim),
+                "mse": float(mse)
+            }
         except Exception as e:
             print(f"Error calculating image quality: {e}")
-            return {'psnr': 0.0, 'ssim': 0.0}
+            return {"psnr": 0.0, "ssim": 0.0, "mse": float('inf')}
     
-    def test_single_image(self, image_path: Path, protection_strength: str = 'medium') -> Dict:
-        """Test effectiveness on a single image."""
-        results = {}
+    def test_single_image(self, image_path: Path, protection_strength: str = 'medium', target_image: Path = None, method: str = 'poison') -> Dict:
+        """Test protection on a single image with focus on confidence reduction."""
+        # Select target image if not provided
+        if target_image is None:
+            target_image = random.choice(self.target_images) if self.target_images else None
         
-        # Get original predictions
-        original_predictions = {}
-        for model_name, classifier in self.classifiers.items():
-            original_predictions[model_name] = classifier.predict(str(image_path))
+        if target_image is None:
+            print(f"No target images available for {image_path}")
+            return {}
         
-        # Apply MandrAIk protection
-        mandrAIk = self.mandrAIk_instances[protection_strength]
-        protected_path = self.output_dir / f"protected_{image_path.stem}_{protection_strength}.jpg"
+        # For hallucinogen method, we need two target images
+        if method == 'hallucinogen':
+            if len(self.target_images) < 2:
+                print(f"Hallucinogen method requires at least 2 target images, but only {len(self.target_images)} available")
+                return {}
+            target_image2 = random.choice([t for t in self.target_images if t != target_image])
         
-        start_time = time.time()
+        # Map protection strength to numerical value
+        strength_map = {
+            'low': 0.1,
+            'medium': 0.15,
+            'high': 0.25
+        }
+        strength_value = strength_map.get(protection_strength, 0.15)
+        
+        # Create output path
+        if method == 'hallucinogen':
+            output_filename = f"protected_{image_path.stem}_{target_image.stem}_{target_image2.stem}_{method}_{protection_strength}.jpg"
+        else:
+            output_filename = f"protected_{image_path.stem}_{target_image.stem}_{method}_{protection_strength}.jpg"
+        output_path = self.output_dir / output_filename
+        
+        # Initialize MandrAIk
+        mandrAIk = MandrAIk(
+            model_name='InceptionV3',
+            steps=3,
+            step_size=0.5,
+            num_ocataves=3,
+            octave_scale=2.5,
+            layer_name='mixed1'
+        )
+        
+        # Apply protection
         try:
-            # Use different protection strengths for the poison method
-            protection_strengths = {'low': 0.1, 'medium': 0.15, 'high': 0.2}
-            mandrAIk.poison(str(image_path), str(protected_path), protection_strengths[protection_strength])
-            processing_time = time.time() - start_time
-        except Exception as e:
-            print(f"Error protecting {image_path}: {e}")
-            return {'error': str(e)}
-        
-        # Get protected predictions
-        protected_predictions = {}
-        for model_name, classifier in self.classifiers.items():
-            protected_predictions[model_name] = classifier.predict(str(protected_path))
-        
-        # Calculate metrics
-        for model_name in self.classifiers.keys():
-            orig_preds = original_predictions[model_name]
-            prot_preds = protected_predictions[model_name]
+            start_time = time.time()
             
-            if not orig_preds or not prot_preds:
-                continue
+            if method == 'poison':
+                mandrAIk.poison(
+                    image_path=str(image_path),
+                    target_image_path=str(target_image),
+                    output_path=str(output_path),
+                    protection_strength=strength_value
+                )
+            elif method == 'hallucinogen':
+                mandrAIk.hallucinogen(
+                    image_path=str(image_path),
+                    target_image_path1=str(target_image),
+                    target_image_path2=str(target_image2),
+                    output_path=str(output_path),
+                    protection_strength=strength_value
+                )
+            else:
+                raise ValueError(f"Unknown protection method: {method}")
             
-            # Attack success rate (top-1 class changed)
-            attack_success = orig_preds[0][0] != prot_preds[0][0]
+            protection_time = time.time() - start_time
             
-            # Confidence drop
-            confidence_drop = orig_preds[0][1] - prot_preds[0][1]
-            
-            # Top-1 accuracy (original correct prediction maintained)
-            top1_accuracy = orig_preds[0][0] == prot_preds[0][0]
-            
-            # Top-5 accuracy (original prediction in top-5)
-            top5_accuracy = any(orig_preds[0][0] == pred[0] for pred in prot_preds[:5])
-            
-            results[model_name] = {
-                'attack_success': attack_success,
-                'confidence_drop': confidence_drop,
-                'top1_accuracy': top1_accuracy,
-                'top5_accuracy': top5_accuracy,
-                'original_top1': orig_preds[0],
-                'protected_top1': prot_preds[0],
-                'original_top5': orig_preds[:5],
-                'protected_top5': prot_preds[:5]
+            # Test with all models
+            results = {
+                'image_path': str(image_path),
+                'target_image': str(target_image),
+                'method': method,
+                'protected_path': str(output_path),
+                'protection_strength': protection_strength,
+                'strength_value': strength_value,
+                'protection_time': protection_time,
+                'models': {}
             }
-        
-        # Image quality metrics
-        quality_metrics = self.calculate_image_quality(image_path, protected_path)
-        results['quality'] = quality_metrics
-        results['processing_time'] = processing_time
-        
-        return results
+            
+            # Add second target for hallucinogen
+            if method == 'hallucinogen':
+                results['target_image2'] = str(target_image2)
+            
+            # Get original predictions
+            original_predictions = {}
+            for model_name, model in self.models.items():
+                try:
+                    original_predictions[model_name] = model.predict(str(image_path))
+                except Exception as e:
+                    print(f"Error getting original predictions for {model_name}: {e}")
+                    original_predictions[model_name] = [("error", 0.0)]
+            
+            # Get protected predictions
+            for model_name, model in self.models.items():
+                try:
+                    protected_predictions = model.predict(str(output_path))
+                    
+                    # Calculate confidence reduction metrics
+                    original_top1 = original_predictions[model_name][0]
+                    protected_top1 = protected_predictions[0]
+                    
+                    # Primary metric: Confidence reduction effectiveness
+                    confidence_reduction = original_top1[1] - protected_top1[1]
+                    confidence_reduction_percentage = (confidence_reduction / original_top1[1]) * 100
+                    
+                    # Secondary metrics
+                    attack_success = original_top1[0] != protected_top1[0]
+                    top5_success = original_top1[0] not in [p[0] for p in protected_predictions]
+                    
+                    # Calculate confidence distribution metrics
+                    original_confidence_entropy = self._calculate_confidence_entropy(original_predictions[model_name])
+                    protected_confidence_entropy = self._calculate_confidence_entropy(protected_predictions)
+                    
+                    # Check if confidence was actually reduced (primary goal)
+                    confidence_reduced = confidence_reduction > 0
+                    
+                    # Calculate max confidence reduction (how much the top prediction dropped)
+                    max_confidence_reduction = original_top1[1] - max([p[1] for p in protected_predictions])
+                    
+                    results['models'][model_name] = {
+                        'original_top1': original_top1,
+                        'protected_top1': protected_top1,
+                        'original_top5': original_predictions[model_name],
+                        'protected_top5': protected_predictions,
+                        
+                        # Primary confidence reduction metrics
+                        'confidence_reduction': confidence_reduction,
+                        'confidence_reduction_percentage': confidence_reduction_percentage,
+                        'confidence_reduced': confidence_reduced,
+                        'max_confidence_reduction': max_confidence_reduction,
+                        
+                        # Secondary attack metrics
+                        'attack_success': attack_success,
+                        'top5_success': top5_success,
+                        
+                        # Confidence distribution metrics
+                        'original_confidence_entropy': original_confidence_entropy,
+                        'protected_confidence_entropy': protected_confidence_entropy,
+                        'entropy_increase': protected_confidence_entropy - original_confidence_entropy
+                    }
+                    
+                except Exception as e:
+                    print(f"Error testing {model_name} on protected image: {e}")
+                    results['models'][model_name] = {
+                        'error': str(e)
+                    }
+            
+            # Calculate image quality
+            quality_metrics = self.calculate_image_quality(image_path, output_path)
+            results['quality_metrics'] = quality_metrics
+            
+            return results
+            
+        except Exception as e:
+            print(f"Error protecting image {image_path}: {e}")
+            return {'error': str(e), 'image_path': str(image_path)}
     
-    def run_comprehensive_test(self, protection_strengths: List[str] = None) -> Dict:
+    def _calculate_confidence_entropy(self, predictions: List[Tuple[str, float]]) -> float:
+        """Calculate entropy of confidence distribution."""
+        confidences = [p[1] for p in predictions]
+        # Normalize to probability distribution
+        total = sum(confidences)
+        if total == 0:
+            return 0.0
+        probabilities = [c / total for c in confidences]
+        
+        # Calculate entropy
+        entropy = 0.0
+        for p in probabilities:
+            if p > 0:
+                entropy -= p * np.log2(p)
+        return entropy
+    
+    def run_comprehensive_test(self, protection_strengths: List[str] = None, methods: List[str] = None) -> Dict:
         """Run comprehensive effectiveness test."""
         if protection_strengths is None:
             protection_strengths = ['low', 'medium', 'high']
         
-        print("Loading test images...")
+        if methods is None:
+            methods = ['poison', 'hallucinogen']
+        
+        print(f"Starting comprehensive test with strengths: {protection_strengths}")
+        print(f"Testing methods: {methods}")
+        print(f"Using {len(self.target_images)} target images")
+        
+        # Load test images
         test_images = self.load_test_images()
+        print(f"Testing with {len(test_images)} images")
         
-        if not test_images:
-            print("No test images available!")
-            return {}
+        all_results = []
         
-        print(f"Running comprehensive test on {len(test_images)} images...")
-        
-        all_results = {}
-        
-        for strength in protection_strengths:
-            print(f"\nTesting protection strength: {strength}")
-            strength_results = []
+        # Test each image with each strength, method, and target
+        for image_path in test_images:
+            print(f"\nTesting image: {image_path.name}")
             
-            for i, image_path in enumerate(test_images):
-                print(f"  Processing image {i+1}/{len(test_images)}: {image_path.name}")
-                result = self.test_single_image(image_path, strength)
+            for method in methods:
+                print(f"  Method: {method}")
                 
-                if 'error' not in result:
-                    strength_results.append(result)
-                else:
-                    print(f"    Error: {result['error']}")
-            
-            if strength_results:
-                all_results[strength] = self._aggregate_results(strength_results)
+                for strength in protection_strengths:
+                    for target_image in self.target_images:
+                        print(f"    Strength: {strength}, Target: {target_image.name}")
+                        
+                        result = self.test_single_image(
+                            image_path=image_path,
+                            protection_strength=strength,
+                            target_image=target_image,
+                            method=method
+                        )
+                        
+                        if result and 'error' not in result:
+                            all_results.append(result)
+        
+        # Aggregate results
+        aggregated_results = self._aggregate_results(all_results)
         
         # Save results
-        self._save_results(all_results)
-        self._generate_report(all_results)
+        self._save_results(aggregated_results)
         
-        return all_results
+        # Generate report
+        self._generate_report(aggregated_results)
+        
+        return aggregated_results
     
     def _aggregate_results(self, results: List[Dict]) -> Dict:
-        """Aggregate results across all images."""
-        aggregated = {}
+        """Aggregate test results with focus on confidence reduction effectiveness."""
+        if not results:
+            return {}
         
-        for model_name in self.classifiers.keys():
-            model_results = [r.get(model_name, {}) for r in results if model_name in r]
-            
-            if not model_results:
-                continue
-            
-            # Calculate statistics
-            attack_success_rate = np.mean([r.get('attack_success', False) for r in model_results])
-            confidence_drops = [r.get('confidence_drop', 0) for r in model_results]
-            top1_accuracies = [r.get('top1_accuracy', False) for r in model_results]
-            top5_accuracies = [r.get('top5_accuracy', False) for r in model_results]
-            
-            aggregated[model_name] = {
-                'attack_success_rate': float(attack_success_rate),
-                'avg_confidence_drop': float(np.mean(confidence_drops)),
-                'std_confidence_drop': float(np.std(confidence_drops)),
-                'top1_accuracy': float(np.mean(top1_accuracies)),
-                'top5_accuracy': float(np.mean(top5_accuracies)),
-                'num_images': len(model_results)
-            }
+        aggregated = {
+            'summary': {},
+            'by_model': {},
+            'by_method': {},
+            'by_strength': {},
+            'by_target': {},
+            'detailed_results': results
+        }
         
-        # Aggregate quality metrics
-        quality_metrics = [r.get('quality', {}) for r in results if 'quality' in r]
-        if quality_metrics:
-            psnr_values = [q.get('psnr', 0) for q in quality_metrics]
-            ssim_values = [q.get('ssim', 0) for q in quality_metrics]
-            
-            aggregated['quality'] = {
-                'avg_psnr': float(np.mean(psnr_values)),
-                'std_psnr': float(np.std(psnr_values)),
-                'avg_ssim': float(np.mean(ssim_values)),
-                'std_ssim': float(np.std(ssim_values))
-            }
+        # Overall statistics
+        total_tests = len(results)
+        successful_protections = sum(1 for r in results if 'error' not in r)
         
-        # Aggregate processing time
-        processing_times = [r.get('processing_time', 0) for r in results if 'processing_time' in r]
-        if processing_times:
-            aggregated['processing_time'] = {
-                'avg_time': float(np.mean(processing_times)),
-                'std_time': float(np.std(processing_times)),
-                'total_time': float(np.sum(processing_times))
-            }
+        aggregated['summary'] = {
+            'total_tests': total_tests,
+            'successful_protections': successful_protections,
+            'protection_success_rate': successful_protections / total_tests if total_tests > 0 else 0
+        }
+        
+        # Aggregate by model - focus on confidence reduction
+        for model_name in self.models.keys():
+            model_results = [r for r in results if 'error' not in r and model_name in r.get('models', {})]
+            
+            if model_results:
+                # Confidence reduction metrics (primary focus)
+                confidence_reductions = [r['models'][model_name].get('confidence_reduction', 0) for r in model_results]
+                confidence_reduction_percentages = [r['models'][model_name].get('confidence_reduction_percentage', 0) for r in model_results]
+                confidence_reduced_count = sum(1 for r in model_results if r['models'][model_name].get('confidence_reduced', False))
+                max_confidence_reductions = [r['models'][model_name].get('max_confidence_reduction', 0) for r in model_results]
+                
+                # Entropy metrics
+                entropy_increases = [r['models'][model_name].get('entropy_increase', 0) for r in model_results]
+                
+                # Secondary attack metrics
+                attack_successes = sum(1 for r in model_results if r['models'][model_name].get('attack_success', False))
+                
+                # Quality metrics
+                avg_psnr = np.mean([r.get('quality_metrics', {}).get('psnr', 0) for r in model_results])
+                
+                aggregated['by_model'][model_name] = {
+                    'total_tests': len(model_results),
+                    
+                    # Primary: Confidence reduction effectiveness
+                    'avg_confidence_reduction': np.mean(confidence_reductions),
+                    'avg_confidence_reduction_percentage': np.mean(confidence_reduction_percentages),
+                    'confidence_reduction_success_rate': confidence_reduced_count / len(model_results),
+                    'avg_max_confidence_reduction': np.mean(max_confidence_reductions),
+                    
+                    # Confidence distribution
+                    'avg_entropy_increase': np.mean(entropy_increases),
+                    
+                    # Secondary: Attack success
+                    'attack_success_rate': attack_successes / len(model_results),
+                    
+                    # Quality
+                    'avg_psnr': avg_psnr
+                }
+        
+        # Aggregate by method - focus on confidence reduction
+        for method in ['poison', 'hallucinogen']:
+            method_results = [r for r in results if r.get('method') == method]
+            
+            if method_results:
+                # Confidence reduction metrics
+                confidence_reductions = [r['models'][m].get('confidence_reduction', 0) 
+                                       for r in method_results 
+                                       for m in r['models'] if 'error' not in r['models'][m]]
+                confidence_reduced_count = sum(1 for r in method_results 
+                                             for m in r['models'] if 'error' not in r['models'][m] 
+                                             and r['models'][m].get('confidence_reduced', False))
+                
+                # Attack success (secondary)
+                attack_successes = sum(1 for r in method_results 
+                                     if any(r['models'][m].get('attack_success', False) 
+                                           for m in r['models'] if 'error' not in r['models'][m]))
+                
+                # Quality metrics
+                avg_psnr = np.mean([r.get('quality_metrics', {}).get('psnr', 0) for r in method_results])
+                
+                aggregated['by_method'][method] = {
+                    'total_tests': len(method_results),
+                    'avg_confidence_reduction': np.mean(confidence_reductions),
+                    'confidence_reduction_success_rate': confidence_reduced_count / len(confidence_reductions) if confidence_reductions else 0,
+                    'attack_success_rate': attack_successes / len(method_results),
+                    'avg_psnr': avg_psnr
+                }
+        
+        # Aggregate by strength - focus on confidence reduction
+        for strength in ['low', 'medium', 'high']:
+            strength_results = [r for r in results if r.get('protection_strength') == strength]
+            
+            if strength_results:
+                # Confidence reduction metrics
+                confidence_reductions = [r['models'][m].get('confidence_reduction', 0) 
+                                       for r in strength_results 
+                                       for m in r['models'] if 'error' not in r['models'][m]]
+                confidence_reduced_count = sum(1 for r in strength_results 
+                                             for m in r['models'] if 'error' not in r['models'][m] 
+                                             and r['models'][m].get('confidence_reduced', False))
+                
+                # Attack success (secondary)
+                attack_successes = sum(1 for r in strength_results 
+                                     if any(r['models'][m].get('attack_success', False) 
+                                           for m in r['models'] if 'error' not in r['models'][m]))
+                
+                aggregated['by_strength'][strength] = {
+                    'total_tests': len(strength_results),
+                    'avg_confidence_reduction': np.mean(confidence_reductions),
+                    'confidence_reduction_success_rate': confidence_reduced_count / len(confidence_reductions) if confidence_reductions else 0,
+                    'attack_success_rate': attack_successes / len(strength_results)
+                }
+        
+        # Aggregate by target - focus on confidence reduction
+        for target_path in self.target_images:
+            target_results = [r for r in results if r.get('target_image') == str(target_path)]
+            
+            if target_results:
+                # Confidence reduction metrics
+                confidence_reductions = [r['models'][m].get('confidence_reduction', 0) 
+                                       for r in target_results 
+                                       for m in r['models'] if 'error' not in r['models'][m]]
+                confidence_reduced_count = sum(1 for r in target_results 
+                                             for m in r['models'] if 'error' not in r['models'][m] 
+                                             and r['models'][m].get('confidence_reduced', False))
+                
+                # Attack success (secondary)
+                attack_successes = sum(1 for r in target_results 
+                                     if any(r['models'][m].get('attack_success', False) 
+                                           for m in r['models'] if 'error' not in r['models'][m]))
+                
+                aggregated['by_target'][target_path.name] = {
+                    'total_tests': len(target_results),
+                    'avg_confidence_reduction': np.mean(confidence_reductions),
+                    'confidence_reduction_success_rate': confidence_reduced_count / len(confidence_reductions) if confidence_reductions else 0,
+                    'attack_success_rate': attack_successes / len(target_results)
+                }
         
         return aggregated
     
     def _save_results(self, results: Dict):
         """Save results to JSON file."""
-        output_file = self.output_dir / "effectiveness_results.json"
-        
-        # Convert numpy types to native Python types for JSON serialization
         def convert_numpy(obj):
             if isinstance(obj, np.integer):
                 return int(obj)
@@ -468,159 +714,182 @@ class MandrAIkEffectivenessTester:
                 return float(obj)
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
-            elif isinstance(obj, dict):
-                return {key: convert_numpy(value) for key, value in obj.items()}
-            elif isinstance(obj, list):
-                return [convert_numpy(item) for item in obj]
             return obj
         
-        results_converted = convert_numpy(results)
+        # Convert numpy types to native Python types
+        results_serializable = json.loads(json.dumps(results, default=convert_numpy))
         
+        output_file = self.output_dir / "effectiveness_results.json"
         with open(output_file, 'w') as f:
-            json.dump(results_converted, f, indent=2)
+            json.dump(results_serializable, f, indent=2)
         
-        print(f"Results saved to {output_file}")
+        print(f"Results saved to: {output_file}")
     
     def _generate_report(self, results: Dict):
-        """Generate comprehensive report with visualizations."""
-        report_file = self.output_dir / "effectiveness_report.md"
+        """Generate a comprehensive report focused on confidence reduction effectiveness."""
+        report_file = self.output_dir / "effectiveness_report.txt"
         
         with open(report_file, 'w') as f:
-            f.write("# MandrAIk Effectiveness Test Report\n\n")
-            f.write(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write("MandrAIk Confidence Reduction Effectiveness Report\n")
+            f.write("=" * 60 + "\n\n")
             
-            for strength, strength_results in results.items():
-                f.write(f"## Protection Strength: {strength.upper()}\n\n")
+            # Summary
+            summary = results.get('summary', {})
+            f.write(f"Total Tests: {summary.get('total_tests', 0)}\n")
+            f.write(f"Successful Protections: {summary.get('successful_protections', 0)}\n")
+            f.write(f"Protection Success Rate: {summary.get('protection_success_rate', 0):.2%}\n\n")
+            
+            # By Model - Primary focus on confidence reduction
+            f.write("Results by Model (Confidence Reduction Focus):\n")
+            f.write("-" * 50 + "\n")
+            for model_name, model_results in results.get('by_model', {}).items():
+                f.write(f"{model_name}:\n")
+                f.write(f"  Confidence Reduction Success Rate: {model_results['confidence_reduction_success_rate']:.2%}\n")
+                f.write(f"  Avg Confidence Reduction: {model_results['avg_confidence_reduction']:.3f}\n")
+                f.write(f"  Avg Confidence Reduction %: {model_results['avg_confidence_reduction_percentage']:.1f}%\n")
+                f.write(f"  Avg Max Confidence Reduction: {model_results['avg_max_confidence_reduction']:.3f}\n")
+                f.write(f"  Avg Entropy Increase: {model_results['avg_entropy_increase']:.3f}\n")
+                f.write(f"  Attack Success Rate: {model_results['attack_success_rate']:.2%}\n")
+                f.write(f"  Avg PSNR: {model_results['avg_psnr']:.2f}\n\n")
+            
+            # By Method - Primary focus on confidence reduction
+            f.write("Results by Protection Method (Confidence Reduction Focus):\n")
+            f.write("-" * 55 + "\n")
+            for method, method_results in results.get('by_method', {}).items():
+                f.write(f"{method}:\n")
+                f.write(f"  Confidence Reduction Success Rate: {method_results['confidence_reduction_success_rate']:.2%}\n")
+                f.write(f"  Avg Confidence Reduction: {method_results['avg_confidence_reduction']:.3f}\n")
+                f.write(f"  Attack Success Rate: {method_results['attack_success_rate']:.2%}\n")
+                f.write(f"  Avg PSNR: {method_results['avg_psnr']:.2f}\n\n")
+            
+            # By Strength - Primary focus on confidence reduction
+            f.write("Results by Protection Strength (Confidence Reduction Focus):\n")
+            f.write("-" * 55 + "\n")
+            for strength, strength_results in results.get('by_strength', {}).items():
+                f.write(f"{strength}:\n")
+                f.write(f"  Confidence Reduction Success Rate: {strength_results['confidence_reduction_success_rate']:.2%}\n")
+                f.write(f"  Avg Confidence Reduction: {strength_results['avg_confidence_reduction']:.3f}\n")
+                f.write(f"  Attack Success Rate: {strength_results['attack_success_rate']:.2%}\n\n")
+            
+            # By Target - Primary focus on confidence reduction
+            f.write("Results by Target Image (Confidence Reduction Focus):\n")
+            f.write("-" * 45 + "\n")
+            for target_name, target_results in results.get('by_target', {}).items():
+                f.write(f"{target_name}:\n")
+                f.write(f"  Confidence Reduction Success Rate: {target_results['confidence_reduction_success_rate']:.2%}\n")
+                f.write(f"  Avg Confidence Reduction: {target_results['avg_confidence_reduction']:.3f}\n")
+                f.write(f"  Attack Success Rate: {target_results['attack_success_rate']:.2%}\n\n")
+            
+            # Key Insights
+            f.write("Key Insights:\n")
+            f.write("-" * 15 + "\n")
+            
+            # Find best performing models for confidence reduction
+            model_results = results.get('by_model', {})
+            if model_results:
+                best_confidence_reduction = max(model_results.items(), 
+                                              key=lambda x: x[1]['confidence_reduction_success_rate'])
+                best_avg_reduction = max(model_results.items(), 
+                                       key=lambda x: x[1]['avg_confidence_reduction'])
                 
-                # Model performance table
-                f.write("### Model Performance\n\n")
-                f.write("| Model | Attack Success Rate | Avg Confidence Drop | Top-1 Accuracy | Top-5 Accuracy |\n")
-                f.write("|-------|-------------------|-------------------|----------------|----------------|\n")
-                
-                for model_name, model_results in strength_results.items():
-                    if model_name in ['quality', 'processing_time']:
-                        continue
-                    
-                    f.write(f"| {model_name} | {model_results['attack_success_rate']:.3f} | "
-                           f"{model_results['avg_confidence_drop']:.3f} | "
-                           f"{model_results['top1_accuracy']:.3f} | "
-                           f"{model_results['top5_accuracy']:.3f} |\n")
-                
-                f.write("\n")
-                
-                # Quality metrics
-                if 'quality' in strength_results:
-                    quality = strength_results['quality']
-                    f.write("### Image Quality Metrics\n\n")
-                    f.write(f"- Average PSNR: {quality['avg_psnr']:.2f} dB\n")
-                    f.write(f"- Average SSIM: {quality['avg_ssim']:.3f}\n\n")
-                
-                # Processing time
-                if 'processing_time' in strength_results:
-                    proc_time = strength_results['processing_time']
-                    f.write("### Processing Performance\n\n")
-                    f.write(f"- Average processing time: {proc_time['avg_time']:.2f} seconds\n")
-                    f.write(f"- Total processing time: {proc_time['total_time']:.2f} seconds\n\n")
+                f.write(f"Best Confidence Reduction Success: {best_confidence_reduction[0]} ({best_confidence_reduction[1]['confidence_reduction_success_rate']:.2%})\n")
+                f.write(f"Best Avg Confidence Reduction: {best_avg_reduction[0]} ({best_avg_reduction[1]['avg_confidence_reduction']:.3f})\n")
+            
+            # Find best performing targets
+            target_results = results.get('by_target', {})
+            if target_results:
+                best_target = max(target_results.items(), 
+                                key=lambda x: x[1]['confidence_reduction_success_rate'])
+                f.write(f"Best Target for Confidence Reduction: {best_target[0]} ({best_target[1]['confidence_reduction_success_rate']:.2%})\n")
+            
+            # Find best strength
+            strength_results = results.get('by_strength', {})
+            if strength_results:
+                best_strength = max(strength_results.items(), 
+                                  key=lambda x: x[1]['confidence_reduction_success_rate'])
+                f.write(f"Best Protection Strength: {best_strength[0]} ({best_strength[1]['confidence_reduction_success_rate']:.2%})\n")
         
-        print(f"Report generated: {report_file}")
-        
-        # Create visualizations
-        self._create_visualizations(results)
+        print(f"Report saved to: {report_file}")
     
     def _create_visualizations(self, results: Dict):
-        """Create visualization plots."""
-        # Set up the plotting style
-        plt.style.use('seaborn-v0_8')
-        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle('MandrAIk Effectiveness Analysis', fontsize=16, fontweight='bold')
-        
-        # Extract data for plotting
-        strengths = list(results.keys())
-        models = list(results[strengths[0]].keys())
-        models = [m for m in models if m not in ['quality', 'processing_time']]
-        
-        # 1. Attack Success Rate
-        ax1 = axes[0, 0]
-        attack_rates = []
-        for strength in strengths:
-            rates = [results[strength][model]['attack_success_rate'] for model in models]
-            attack_rates.append(rates)
-        
-        x = np.arange(len(models))
-        width = 0.25
-        
-        for i, strength in enumerate(strengths):
-            ax1.bar(x + i*width, attack_rates[i], width, label=strength.capitalize(), alpha=0.8)
-        
-        ax1.set_xlabel('Models')
-        ax1.set_ylabel('Attack Success Rate')
-        ax1.set_title('Attack Success Rate by Model and Protection Strength')
-        ax1.set_xticks(x + width)
-        ax1.set_xticklabels(models, rotation=45, ha='right')
-        ax1.legend()
-        ax1.grid(True, alpha=0.3)
-        
-        # 2. Confidence Drop
-        ax2 = axes[0, 1]
-        confidence_drops = []
-        for strength in strengths:
-            drops = [results[strength][model]['avg_confidence_drop'] for model in models]
-            confidence_drops.append(drops)
-        
-        for i, strength in enumerate(strengths):
-            ax2.bar(x + i*width, confidence_drops[i], width, label=strength.capitalize(), alpha=0.8)
-        
-        ax2.set_xlabel('Models')
-        ax2.set_ylabel('Average Confidence Drop')
-        ax2.set_title('Confidence Drop by Model and Protection Strength')
-        ax2.set_xticks(x + width)
-        ax2.set_xticklabels(models, rotation=45, ha='right')
-        ax2.legend()
-        ax2.grid(True, alpha=0.3)
-        
-        # 3. Image Quality (PSNR)
-        ax3 = axes[1, 0]
-        psnr_values = []
-        for strength in strengths:
-            if 'quality' in results[strength]:
-                psnr_values.append(results[strength]['quality']['avg_psnr'])
-            else:
-                psnr_values.append(0)
-        
-        ax3.bar(strengths, psnr_values, alpha=0.8, color='green')
-        ax3.set_xlabel('Protection Strength')
-        ax3.set_ylabel('Average PSNR (dB)')
-        ax3.set_title('Image Quality (PSNR) by Protection Strength')
-        ax3.grid(True, alpha=0.3)
-        
-        # 4. Processing Time
-        ax4 = axes[1, 1]
-        proc_times = []
-        for strength in strengths:
-            if 'processing_time' in results[strength]:
-                proc_times.append(results[strength]['processing_time']['avg_time'])
-            else:
-                proc_times.append(0)
-        
-        ax4.bar(strengths, proc_times, alpha=0.8, color='orange')
-        ax4.set_xlabel('Protection Strength')
-        ax4.set_ylabel('Average Processing Time (seconds)')
-        ax4.set_title('Processing Time by Protection Strength')
-        ax4.grid(True, alpha=0.3)
-        
-        plt.tight_layout()
-        
-        # Save plot
-        plot_file = self.output_dir / "effectiveness_analysis.png"
-        plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        print(f"Visualization saved: {plot_file}")
+        """Create visualizations of the results."""
+        try:
+            # Set up the plotting style
+            plt.style.use('default')
+            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('MandrAIk Effectiveness Test Results', fontsize=16)
+            
+            # 1. Attack success rate by model
+            if results.get('by_model'):
+                models = list(results['by_model'].keys())
+                success_rates = [results['by_model'][m]['attack_success_rate'] for m in models]
+                
+                axes[0, 0].bar(models, success_rates, color='skyblue')
+                axes[0, 0].set_title('Attack Success Rate by Model')
+                axes[0, 0].set_ylabel('Success Rate')
+                axes[0, 0].tick_params(axis='x', rotation=45)
+                axes[0, 0].set_ylim(0, 1)
+                
+                # Add percentage labels
+                for i, v in enumerate(success_rates):
+                    axes[0, 0].text(i, v + 0.01, f'{v:.1%}', ha='center')
+            
+            # 2. Confidence drop by model
+            if results.get('by_model'):
+                confidence_drops = [results['by_model'][m]['avg_confidence_reduction'] for m in models]
+                
+                axes[0, 1].bar(models, confidence_drops, color='lightcoral')
+                axes[0, 1].set_title('Average Confidence Drop by Model')
+                axes[0, 1].set_ylabel('Confidence Drop')
+                axes[0, 1].tick_params(axis='x', rotation=45)
+                
+                # Add value labels
+                for i, v in enumerate(confidence_drops):
+                    axes[0, 1].text(i, v + 0.01 if v > 0 else v - 0.01, f'{v:.3f}', ha='center')
+            
+            # 3. Attack success rate by protection strength
+            if results.get('by_strength'):
+                strengths = list(results['by_strength'].keys())
+                strength_success_rates = [results['by_strength'][s]['attack_success_rate'] for s in strengths]
+                
+                axes[1, 0].bar(strengths, strength_success_rates, color='lightgreen')
+                axes[1, 0].set_title('Attack Success Rate by Protection Strength')
+                axes[1, 0].set_ylabel('Success Rate')
+                axes[1, 0].set_ylim(0, 1)
+                
+                # Add percentage labels
+                for i, v in enumerate(strength_success_rates):
+                    axes[1, 0].text(i, v + 0.01, f'{v:.1%}', ha='center')
+            
+            # 4. Image quality (PSNR) by model
+            if results.get('by_model'):
+                psnr_values = [results['by_model'][m]['avg_psnr'] for m in models]
+                
+                axes[1, 1].bar(models, psnr_values, color='gold')
+                axes[1, 1].set_title('Average PSNR by Model')
+                axes[1, 1].set_ylabel('PSNR (dB)')
+                axes[1, 1].tick_params(axis='x', rotation=45)
+                
+                # Add value labels
+                for i, v in enumerate(psnr_values):
+                    axes[1, 1].text(i, v + 0.5, f'{v:.1f}', ha='center')
+            
+            plt.tight_layout()
+            
+            # Save the plot
+            plot_file = self.output_dir / "effectiveness_visualization.png"
+            plt.savefig(plot_file, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            print(f"Visualization saved to: {plot_file}")
+            
+        except Exception as e:
+            print(f"Error creating visualizations: {e}")
 
 def main():
     """Main function to run the effectiveness test."""
     print("MandrAIk Effectiveness Test Suite")
-    print("=" * 50)
+    print("=" * 40)
     
     # Initialize tester
     tester = MandrAIkEffectivenessTester()
@@ -628,18 +897,11 @@ def main():
     # Run comprehensive test
     results = tester.run_comprehensive_test()
     
-    if results:
-        print("\n" + "=" * 50)
-        print("TEST COMPLETED SUCCESSFULLY!")
-        print("=" * 50)
-        print(f"Results saved to: {tester.output_dir}")
-        print("Files generated:")
-        print(f"  - effectiveness_results.json (raw data)")
-        print(f"  - effectiveness_report.md (detailed report)")
-        print(f"  - effectiveness_analysis.png (visualizations)")
-        print(f"  - protected_*.jpg (protected test images)")
-    else:
-        print("Test failed to complete!")
+    # Create visualizations
+    tester._create_visualizations(results)
+    
+    print("\nTest completed!")
+    print(f"Results saved to: {tester.output_dir}")
 
 if __name__ == "__main__":
     main() 
