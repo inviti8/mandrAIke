@@ -10,7 +10,7 @@ import random
 FILE_PATH = Path(__file__).parent
 
 class MandrAIk:
-    def __init__(self, model_name='InceptionV3', steps=3, step_size=0.5, num_ocataves=3, octave_scale=2.5, noise_level="Min", layer_name='mixed1', max_dim=1024):
+    def __init__(self, model_name='InceptionV3', steps=3, step_size=0.5, num_ocataves=3, octave_scale=2.5, noise_level="Min", layer_name='mixed1', max_dim=512):
         """
         Initialize the image protection system.
         
@@ -288,7 +288,7 @@ class MandrAIk:
     
     def hallucinogen(self, image_path, target_image_path1, target_image_path2, output_path, protection_strength=0.15):
         """
-        Apply chained hallucination protection by alternating between targets.
+        Apply enhanced chained hallucination protection with strategic target selection.
         
         Args:
             image_path: Path to input image
@@ -301,47 +301,70 @@ class MandrAIk:
         original_img = cv2.imread(image_path)
         original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
         
-        print(f"Applying chained hallucination")
+        print(f"Applying enhanced chained hallucination")
         
         # Initialize with original image
         current_img = original_img.copy()
         chain_steps = 5
         
-        # Chain process: alternate between targets
+        # Pre-dream both targets to avoid repeated computation
+        print("  Pre-dreaming target images...")
+        dreamed_target1 = self._dream_target_image(target_image_path1)
+        dreamed_target2 = self._dream_target_image(target_image_path2)
+        
+        # Calculate initial step strength (not divided by chain_steps)
+        base_step_strength = protection_strength * 0.3  # 30% of total strength per step
+        
+        # Chain process with strategic target selection
         for step in range(chain_steps):
-            target_path = target_image_path1 if step % 2 == 0 else target_image_path2
-            target_name = "Target 1" if step % 2 == 0 else "Target 2"
+            # Strategic target selection based on step
+            if step < 2:
+                # Early steps: use target1 for initial perturbation
+                target_name = "Target 1"
+                dreamed_target = dreamed_target1
+                step_strength = base_step_strength * 1.2  # Stronger early steps
+            elif step < 4:
+                # Middle steps: alternate for confusion
+                target_name = "Target 2" if step % 2 == 0 else "Target 1"
+                dreamed_target = dreamed_target2 if step % 2 == 0 else dreamed_target1
+                step_strength = base_step_strength * 0.8  # Moderate middle steps
+            else:
+                # Final step: use target2 for finishing
+                target_name = "Target 2"
+                dreamed_target = dreamed_target2
+                step_strength = base_step_strength * 1.0  # Standard final step
             
-            print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name}")
+            print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name} (strength: {step_strength:.3f})")
             
-            # Dream the target
-            dreamed_target = self._dream_target_image(target_path)
-            
-            # Apply perturbation
-            current_img = self._apply_chained_perturbation(
-                current_img, dreamed_target, protection_strength / chain_steps
+            # Apply enhanced perturbation
+            current_img = self._apply_enhanced_chained_perturbation(
+                current_img, dreamed_target, step_strength, step
             )
             
-            # Add some noise to break up patterns
-            noise_strength = (protection_strength / chain_steps) * 0.2
-            noise = np.random.normal(0, noise_strength * 15, current_img.shape)
-            current_img = np.clip(current_img.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+            # Add strategic noise based on step
+            noise_strength = step_strength * 0.4  # Increased noise contribution
+            current_img = self._apply_strategic_noise(current_img, noise_strength, step)
         
-        # Save the final chained hallucination
+        # Final enhancement step
+        current_img = self._apply_final_enhancement(current_img, protection_strength)
+        
+        # Save the final enhanced chained hallucination
         self._save_image(current_img, output_path)
         
         return current_img
     
-    def _apply_chained_perturbation(self, current_img: np.ndarray, 
-                                  dreamed_target: np.ndarray, 
-                                  step_strength: float) -> np.ndarray:
+    def _apply_enhanced_chained_perturbation(self, current_img: np.ndarray, 
+                                           dreamed_target: np.ndarray, 
+                                           step_strength: float,
+                                           step: int) -> np.ndarray:
         """
-        Apply perturbation for chained hallucination.
+        Apply enhanced perturbation for chained hallucination.
         
         Args:
             current_img: Current image in chain (RGB, 0-255)
             dreamed_target: Dreamed target image (RGB, 0-255)
             step_strength: Strength for this step (0.0-1.0)
+            step: Current step number for adaptive perturbation
         
         Returns:
             Perturbed image for next step
@@ -350,26 +373,106 @@ class MandrAIk:
         if current_img.shape != dreamed_target.shape:
             dreamed_target = cv2.resize(dreamed_target, (current_img.shape[1], current_img.shape[0]))
         
-        # Convert to LAB color space
-        current_lab = cv2.cvtColor(current_img, cv2.COLOR_RGB2LAB)
-        dreamed_lab = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2LAB)
+        # Convert to multiple color spaces for comprehensive perturbation
+        current_rgb = current_img.astype(np.float32)
+        dreamed_rgb = dreamed_target.astype(np.float32)
         
-        # Split channels
-        curr_l, curr_a, curr_b = cv2.split(current_lab)
-        dream_l, dream_a, dream_b = cv2.split(dreamed_lab)
+        # RGB perturbation (structural)
+        rgb_diff = dreamed_rgb - current_rgb
+        rgb_perturbation = rgb_diff * step_strength * 0.4
         
-        # Calculate differences
-        l_diff = dream_l.astype(np.float32) - curr_l.astype(np.float32)
-        a_diff = dream_a.astype(np.float32) - curr_a.astype(np.float32)
-        b_diff = dream_b.astype(np.float32) - curr_b.astype(np.float32)
+        # LAB perturbation (color)
+        current_lab = cv2.cvtColor(current_img, cv2.COLOR_RGB2LAB).astype(np.float32)
+        dreamed_lab = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2LAB).astype(np.float32)
         
-        # Apply perturbation
-        new_l = np.clip(curr_l.astype(np.float32) + (l_diff * step_strength), 0, 255).astype(np.uint8)
-        new_a = np.clip(curr_a.astype(np.float32) + (a_diff * step_strength), 0, 255).astype(np.uint8)
-        new_b = np.clip(curr_b.astype(np.float32) + (b_diff * step_strength), 0, 255).astype(np.uint8)
+        lab_diff = dreamed_lab - current_lab
+        lab_perturbation = lab_diff * step_strength * 0.3
         
-        # Merge channels and convert back to RGB
-        perturbed_lab = cv2.merge([new_l, new_a, new_b])
-        perturbed_rgb = cv2.cvtColor(perturbed_lab, cv2.COLOR_LAB2RGB)
+        # HSV perturbation (hue/saturation)
+        current_hsv = cv2.cvtColor(current_img, cv2.COLOR_RGB2HSV).astype(np.float32)
+        dreamed_hsv = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2HSV).astype(np.float32)
         
-        return perturbed_rgb
+        hsv_diff = dreamed_hsv - current_hsv
+        hsv_perturbation = hsv_diff * step_strength * 0.3
+        
+        # Apply perturbations
+        # RGB perturbation
+        perturbed_rgb = current_rgb + rgb_perturbation
+        
+        # LAB perturbation
+        perturbed_lab = current_lab + lab_perturbation
+        perturbed_lab_rgb = cv2.cvtColor(perturbed_lab.astype(np.uint8), cv2.COLOR_LAB2RGB).astype(np.float32)
+        
+        # HSV perturbation
+        perturbed_hsv = current_hsv + hsv_perturbation
+        perturbed_hsv_rgb = cv2.cvtColor(perturbed_hsv.astype(np.uint8), cv2.COLOR_HSV2RGB).astype(np.float32)
+        
+        # Combine perturbations with adaptive weights
+        if step < 2:
+            # Early steps: emphasize RGB (structural)
+            combined = perturbed_rgb * 0.6 + perturbed_lab_rgb * 0.2 + perturbed_hsv_rgb * 0.2
+        elif step < 4:
+            # Middle steps: balance all spaces
+            combined = perturbed_rgb * 0.4 + perturbed_lab_rgb * 0.3 + perturbed_hsv_rgb * 0.3
+        else:
+            # Final steps: emphasize color spaces
+            combined = perturbed_rgb * 0.3 + perturbed_lab_rgb * 0.4 + perturbed_hsv_rgb * 0.3
+        
+        # Clip and convert back
+        combined = np.clip(combined, 0, 255).astype(np.uint8)
+        
+        return combined
+    
+    def _apply_strategic_noise(self, image: np.ndarray, noise_strength: float, step: int) -> np.ndarray:
+        """
+        Apply strategic noise based on step position.
+        
+        Args:
+            image: Input image
+            noise_strength: Strength of noise
+            step: Current step number
+        
+        Returns:
+            Image with strategic noise
+        """
+        # Different noise patterns for different steps
+        if step < 2:
+            # Early steps: high-frequency noise for detail disruption
+            noise = np.random.normal(0, noise_strength * 25, image.shape)
+        elif step < 4:
+            # Middle steps: medium-frequency noise
+            noise = np.random.normal(0, noise_strength * 20, image.shape)
+        else:
+            # Final steps: low-frequency noise for smooth finish
+            noise = np.random.normal(0, noise_strength * 15, image.shape)
+        
+        # Apply noise with clipping
+        noisy_image = np.clip(image.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+        
+        return noisy_image
+    
+    def _apply_final_enhancement(self, image: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply final enhancement to maximize adversarial effect.
+        
+        Args:
+            image: Input image
+            protection_strength: Overall protection strength
+        
+        Returns:
+            Enhanced image
+        """
+        # Convert to float for processing
+        img_float = image.astype(np.float32)
+        
+        # Apply subtle edge enhancement to create adversarial patterns
+        kernel = np.array([[-1, -1, -1],
+                          [-1,  9, -1],
+                          [-1, -1, -1]]) * (protection_strength * 0.1)
+        
+        enhanced = cv2.filter2D(img_float, -1, kernel)
+        
+        # Blend with original to maintain quality
+        final_image = img_float * 0.8 + enhanced * 0.2
+        
+        return np.clip(final_image, 0, 255).astype(np.uint8)
