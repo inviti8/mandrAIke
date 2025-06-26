@@ -10,7 +10,7 @@ import random
 FILE_PATH = Path(__file__).parent
 
 class MandrAIk:
-    def __init__(self, model_name='InceptionV3', steps=3, step_size=0.5, num_ocataves=3, octave_scale=2.5, noise_level="Min", layer_name='mixed1', max_dim=512):
+    def __init__(self, model_name='InceptionV3', steps=3, step_size=0.8, num_ocataves=3, octave_scale=2.5, noise_level="Min", layer_name='mixed7', max_dim=512):
         """
         Initialize the image protection system.
         
@@ -25,7 +25,7 @@ class MandrAIk:
             max_dim: max dimensions of image
         """
         self.model_name = model_name
-        self.steps = steps,
+        self.steps = steps
         self.step_size = step_size
         self.num_ocataves = num_ocataves
         self.octave_scale = octave_scale
@@ -65,7 +65,7 @@ class MandrAIk:
         # Run deep dream on the target image
         dreamed_target = self._run_deep_dream(
             img=target_img,
-            steps_per_octave=self.steps[0],  # Fix tuple issue
+            steps_per_octave=self.steps,
             step_size=self.step_size,
             octaves=self.num_ocataves,
             octave_scale=self.octave_scale
@@ -103,7 +103,7 @@ class MandrAIk:
         # Dream the random noise
         dreamed_random = self._run_deep_dream(
             img=random_target,
-            steps_per_octave=self.steps[0],  # Fix tuple issue
+            steps_per_octave=self.steps,
             step_size=self.step_size,
             octaves=self.num_ocataves,
             octave_scale=self.octave_scale
@@ -111,15 +111,16 @@ class MandrAIk:
         
         self.dreamed_target = self._deprocess(dreamed_random.numpy())
     
-    def poison(self, image_path, target_image_path, output_path, protection_strength=0.15):
+    def poison(self, image_path, target_image_path, output_path, protection_strength=0.15, fgsm_epsilon=16/255):
         """
-        Apply protection to an image using target-dream perturbation.
+        Apply protection to an image using target-dream perturbation with additional FGSM enhancement.
         
         Args:
             image_path: Path to input image
             target_image_path: Path to target image to dream
             output_path: Path to save protected image
             protection_strength: Strength of protection (0.0-1.0)
+            fgsm_epsilon: FGSM perturbation magnitude (default: 16/255)
         """
         # Load original image
         original_img = cv2.imread(image_path)
@@ -137,14 +138,18 @@ class MandrAIk:
             original_img, self.dreamed_target, protection_strength
         )
         
-        # Save protected image
-        self._save_image(perturbed_img, output_path)
+        # Apply additional FGSM perturbation for enhanced effectiveness
+        # print(f"  Applying additional FGSM perturbation (epsilon: {fgsm_epsilon:.4f})...")
+        # final_img = self._targeted_fgsm_perturbation(
+        #     perturbed_img, self.dreamed_target, fgsm_epsilon
+        # )
         
-        return perturbed_img
+        # Save protected image
+        self._save_image(final_img, output_path)
+        
+        return final_img
     
-    def _apply_dreamed_perturbation(self, original_img: np.ndarray, 
-                                  dreamed_target: np.ndarray, 
-                                  protection_strength: float) -> np.ndarray:
+    def _apply_dreamed_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
         """
         Apply perturbation to original image based on dreamed target features.
         
@@ -185,6 +190,78 @@ class MandrAIk:
         
         return perturbed_rgb
     
+    def _apply_dreamed_perturbation_lab(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply perturbation in LAB color space.
+        """
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        original_lab = cv2.cvtColor(original_img, cv2.COLOR_RGB2LAB)
+        dreamed_lab = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2LAB)
+        orig_l, orig_a, orig_b = cv2.split(original_lab)
+        dream_l, dream_a, dream_b = cv2.split(dreamed_lab)
+        l_diff = dream_l.astype(np.float32) - orig_l.astype(np.float32)
+        a_diff = dream_a.astype(np.float32) - orig_a.astype(np.float32)
+        b_diff = dream_b.astype(np.float32) - orig_b.astype(np.float32)
+        new_l = np.clip(orig_l.astype(np.float32) + (l_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_a = np.clip(orig_a.astype(np.float32) + (a_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_b = np.clip(orig_b.astype(np.float32) + (b_diff * protection_strength), 0, 255).astype(np.uint8)
+        perturbed_lab = cv2.merge([new_l, new_a, new_b])
+        perturbed_rgb = cv2.cvtColor(perturbed_lab, cv2.COLOR_LAB2RGB)
+        return perturbed_rgb
+
+    def _apply_dreamed_perturbation_rgb(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply perturbation in RGB space.
+        """
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        original_float = original_img.astype(np.float32)
+        dreamed_float = dreamed_target.astype(np.float32)
+        diff = dreamed_float - original_float
+        perturbed = np.clip(original_float + diff * protection_strength, 0, 255).astype(np.uint8)
+        return perturbed
+
+    def _apply_dreamed_perturbation_hsv(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply perturbation in HSV color space.
+        """
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        original_hsv = cv2.cvtColor(original_img, cv2.COLOR_RGB2HSV)
+        dreamed_hsv = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2HSV)
+        orig_h, orig_s, orig_v = cv2.split(original_hsv)
+        dream_h, dream_s, dream_v = cv2.split(dreamed_hsv)
+        h_diff = dream_h.astype(np.float32) - orig_h.astype(np.float32)
+        s_diff = dream_s.astype(np.float32) - orig_s.astype(np.float32)
+        v_diff = dream_v.astype(np.float32) - orig_v.astype(np.float32)
+        new_h = np.clip(orig_h.astype(np.float32) + (h_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_s = np.clip(orig_s.astype(np.float32) + (s_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_v = np.clip(orig_v.astype(np.float32) + (v_diff * protection_strength), 0, 255).astype(np.uint8)
+        perturbed_hsv = cv2.merge([new_h, new_s, new_v])
+        perturbed_rgb = cv2.cvtColor(perturbed_hsv, cv2.COLOR_HSV2RGB)
+        return perturbed_rgb
+
+    def _apply_dreamed_perturbation_yuv(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply perturbation in YUV color space.
+        """
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        original_yuv = cv2.cvtColor(original_img, cv2.COLOR_RGB2YUV)
+        dreamed_yuv = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2YUV)
+        orig_y, orig_u, orig_v = cv2.split(original_yuv)
+        dream_y, dream_u, dream_v = cv2.split(dreamed_yuv)
+        y_diff = dream_y.astype(np.float32) - orig_y.astype(np.float32)
+        u_diff = dream_u.astype(np.float32) - orig_u.astype(np.float32)
+        v_diff = dream_v.astype(np.float32) - orig_v.astype(np.float32)
+        new_y = np.clip(orig_y.astype(np.float32) + (y_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_u = np.clip(orig_u.astype(np.float32) + (u_diff * protection_strength), 0, 255).astype(np.uint8)
+        new_v = np.clip(orig_v.astype(np.float32) + (v_diff * protection_strength), 0, 255).astype(np.uint8)
+        perturbed_yuv = cv2.merge([new_y, new_u, new_v])
+        perturbed_rgb = cv2.cvtColor(perturbed_yuv, cv2.COLOR_YUV2RGB)
+        return perturbed_rgb
+    
     def dream(self, image_path, output_path=None):
         """
         Get dream output.
@@ -198,8 +275,8 @@ class MandrAIk:
         noised_img = self._noised_image(img)
 
         dreamed_img = self._run_deep_dream(
-            img=noised_img,
-            steps_per_octave=self.steps[0],  # Fix tuple issue
+            img=noised_img, 
+            steps_per_octave=self.steps,
             step_size=self.step_size,
             octaves=self.num_ocataves,
             octave_scale=self.octave_scale
@@ -255,7 +332,7 @@ class MandrAIk:
         noise = np.random.normal(0, noise_levels[noise_level] * 255, image.shape)
         noisy_image = np.clip(image + noise, 0, 255).astype(np.uint8)
         return noisy_image
-    
+
     def _calc_loss(self, img, model):
         """Calculate loss for deep dream."""
         img_batch = tf.expand_dims(img, axis=0)
@@ -288,7 +365,7 @@ class MandrAIk:
     
     def hallucinogen(self, image_path, target_image_path1, target_image_path2, output_path, protection_strength=0.15):
         """
-        Apply enhanced chained hallucination protection with strategic target selection.
+        Apply enhanced chained hallucination protection with multi-space perturbations.
         
         Args:
             image_path: Path to input image
@@ -301,127 +378,43 @@ class MandrAIk:
         original_img = cv2.imread(image_path)
         original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
         
-        print(f"Applying enhanced chained hallucination")
+        print(f"Applying enhanced chained hallucination (multi-space)")
         
         # Initialize with original image
         current_img = original_img.copy()
-        chain_steps = 5
+        chain_steps = 20
         
+        print(f"Applying enhanced chained hallucination (multi-space)")
         # Pre-dream both targets to avoid repeated computation
         print("  Pre-dreaming target images...")
         dreamed_target1 = self._dream_target_image(target_image_path1)
-        dreamed_target2 = self._dream_target_image(target_image_path2)
         
-        # Calculate initial step strength (not divided by chain_steps)
-        base_step_strength = protection_strength * 0.3  # 30% of total strength per step
-        
-        # Chain process with strategic target selection
+        # Dream target2 starting from dreamed_target1 for better coherence
+        print("  Dreaming target2 from dreamed_target1 base...")
+        dreamed_target2 = self._dream_target_image_from_base(target_image_path2, dreamed_target1)
+        base_step_strength = protection_strength * 0.3
         for step in range(chain_steps):
-            # Strategic target selection based on step
             if step < 2:
-                # Early steps: use target1 for initial perturbation
                 target_name = "Target 1"
                 dreamed_target = dreamed_target1
-                step_strength = base_step_strength * 1.2  # Stronger early steps
+                step_strength = base_step_strength * 1.2
             elif step < 4:
-                # Middle steps: alternate for confusion
                 target_name = "Target 2" if step % 2 == 0 else "Target 1"
                 dreamed_target = dreamed_target2 if step % 2 == 0 else dreamed_target1
-                step_strength = base_step_strength * 0.8  # Moderate middle steps
+                step_strength = base_step_strength * 0.8
             else:
-                # Final step: use target2 for finishing
                 target_name = "Target 2"
                 dreamed_target = dreamed_target2
-                step_strength = base_step_strength * 1.0  # Standard final step
-            
+                step_strength = base_step_strength * 1.0
             print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name} (strength: {step_strength:.3f})")
-            
-            # Apply enhanced perturbation
-            current_img = self._apply_enhanced_chained_perturbation(
-                current_img, dreamed_target, step_strength, step
-            )
-            
-            # Add strategic noise based on step
-            noise_strength = step_strength * 0.4  # Increased noise contribution
-            current_img = self._apply_strategic_noise(current_img, noise_strength, step)
-        
-        # Final enhancement step
+            current_img = self._apply_dreamed_perturbation_lab(current_img, dreamed_target, step_strength)
+            current_img = self._apply_dreamed_perturbation_hsv(current_img, dreamed_target, step_strength)
+
         current_img = self._apply_final_enhancement(current_img, protection_strength)
-        
+
         # Save the final enhanced chained hallucination
         self._save_image(current_img, output_path)
-        
         return current_img
-    
-    def _apply_enhanced_chained_perturbation(self, current_img: np.ndarray, 
-                                           dreamed_target: np.ndarray, 
-                                           step_strength: float,
-                                           step: int) -> np.ndarray:
-        """
-        Apply enhanced perturbation for chained hallucination.
-        
-        Args:
-            current_img: Current image in chain (RGB, 0-255)
-            dreamed_target: Dreamed target image (RGB, 0-255)
-            step_strength: Strength for this step (0.0-1.0)
-            step: Current step number for adaptive perturbation
-        
-        Returns:
-            Perturbed image for next step
-        """
-        # Ensure both images are the same size
-        if current_img.shape != dreamed_target.shape:
-            dreamed_target = cv2.resize(dreamed_target, (current_img.shape[1], current_img.shape[0]))
-        
-        # Convert to multiple color spaces for comprehensive perturbation
-        current_rgb = current_img.astype(np.float32)
-        dreamed_rgb = dreamed_target.astype(np.float32)
-        
-        # RGB perturbation (structural)
-        rgb_diff = dreamed_rgb - current_rgb
-        rgb_perturbation = rgb_diff * step_strength * 0.4
-        
-        # LAB perturbation (color)
-        current_lab = cv2.cvtColor(current_img, cv2.COLOR_RGB2LAB).astype(np.float32)
-        dreamed_lab = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2LAB).astype(np.float32)
-        
-        lab_diff = dreamed_lab - current_lab
-        lab_perturbation = lab_diff * step_strength * 0.3
-        
-        # HSV perturbation (hue/saturation)
-        current_hsv = cv2.cvtColor(current_img, cv2.COLOR_RGB2HSV).astype(np.float32)
-        dreamed_hsv = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2HSV).astype(np.float32)
-        
-        hsv_diff = dreamed_hsv - current_hsv
-        hsv_perturbation = hsv_diff * step_strength * 0.3
-        
-        # Apply perturbations
-        # RGB perturbation
-        perturbed_rgb = current_rgb + rgb_perturbation
-        
-        # LAB perturbation
-        perturbed_lab = current_lab + lab_perturbation
-        perturbed_lab_rgb = cv2.cvtColor(perturbed_lab.astype(np.uint8), cv2.COLOR_LAB2RGB).astype(np.float32)
-        
-        # HSV perturbation
-        perturbed_hsv = current_hsv + hsv_perturbation
-        perturbed_hsv_rgb = cv2.cvtColor(perturbed_hsv.astype(np.uint8), cv2.COLOR_HSV2RGB).astype(np.float32)
-        
-        # Combine perturbations with adaptive weights
-        if step < 2:
-            # Early steps: emphasize RGB (structural)
-            combined = perturbed_rgb * 0.6 + perturbed_lab_rgb * 0.2 + perturbed_hsv_rgb * 0.2
-        elif step < 4:
-            # Middle steps: balance all spaces
-            combined = perturbed_rgb * 0.4 + perturbed_lab_rgb * 0.3 + perturbed_hsv_rgb * 0.3
-        else:
-            # Final steps: emphasize color spaces
-            combined = perturbed_rgb * 0.3 + perturbed_lab_rgb * 0.4 + perturbed_hsv_rgb * 0.3
-        
-        # Clip and convert back
-        combined = np.clip(combined, 0, 255).astype(np.uint8)
-        
-        return combined
     
     def _apply_strategic_noise(self, image: np.ndarray, noise_strength: float, step: int) -> np.ndarray:
         """
@@ -476,3 +469,173 @@ class MandrAIk:
         final_image = img_float * 0.8 + enhanced * 0.2
         
         return np.clip(final_image, 0, 255).astype(np.uint8)
+
+    def fgsm_hallucinogen(self, image_path, target_image_path1, target_image_path2, output_path, epsilon=8/255, chain_steps=5):
+        """
+        Apply FGSM-style hallucination protection using dreamed targets.
+        Args:
+            image_path: Path to input image
+            target_image_path1: Path to first target image
+            target_image_path2: Path to second target image
+            output_path: Path to save protected image
+            epsilon: Step size for FGSM update (default 8/255)
+            chain_steps: Number of chain steps (default 5)
+        """
+        import tensorflow as tf
+        # Load original image
+        original_img = cv2.imread(image_path)
+        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+        img_shape = original_img.shape
+        img = original_img.astype(np.float32) / 255.0
+        img = np.expand_dims(img, axis=0)
+        img = tf.convert_to_tensor(img)
+
+        # Pre-dream both targets
+        dreamed_target1 = self._dream_target_image(target_image_path1)
+        
+        # Dream target2 starting from dreamed_target1 for better coherence
+        dreamed_target2 = self._dream_target_image_from_base(target_image_path2, dreamed_target1)
+        dreamed_target1 = cv2.resize(dreamed_target1, (img_shape[1], img_shape[0]))
+        dreamed_target2 = cv2.resize(dreamed_target2, (img_shape[1], img_shape[0]))
+        dreamed_target1 = dreamed_target1.astype(np.float32) / 255.0
+        dreamed_target2 = dreamed_target2.astype(np.float32) / 255.0
+        dreamed_target1 = tf.convert_to_tensor(np.expand_dims(dreamed_target1, axis=0))
+        dreamed_target2 = tf.convert_to_tensor(np.expand_dims(dreamed_target2, axis=0))
+
+        # FGSM chain
+        perturbed = img
+        for step in range(chain_steps):
+            with tf.GradientTape() as tape:
+                tape.watch(perturbed)
+                # Alternate target per step
+                if step % 2 == 0:
+                    loss = tf.reduce_mean(tf.square(perturbed - dreamed_target1))
+                else:
+                    loss = tf.reduce_mean(tf.square(perturbed - dreamed_target2))
+            grad = tape.gradient(loss, perturbed)
+            signed_grad = tf.sign(grad)
+            perturbed = perturbed + epsilon * signed_grad
+            perturbed = tf.clip_by_value(perturbed, 0.0, 1.0)
+
+        final_img = (perturbed[0].numpy() * 255).astype(np.uint8)
+        self._save_image(final_img, output_path)
+        return final_img
+
+    def _dream_target_image_from_base(self, target_path: str, base_image: np.ndarray) -> np.ndarray:
+        """Dream the target image starting from a base image for better coherence."""
+        print(f"Dreaming target image from base: {target_path}")
+        
+        # Load target image
+        target_img = self._load_image(target_path)
+        
+        # Resize base image to match target preprocessing
+        base_resized = cv2.resize(base_image, (299, 299))
+        base_tensor = tf.convert_to_tensor(base_resized.astype(np.float32))
+        base_tensor = tf.keras.applications.inception_v3.preprocess_input(base_tensor)
+        
+        # Run deep dream starting from the base image
+        dreamed_target = self._run_deep_dream(
+            img=base_tensor,
+            steps_per_octave=self.steps,
+            step_size=self.step_size,
+            octaves=self.num_ocataves,
+            octave_scale=self.octave_scale
+        )
+        
+        # Convert to RGB
+        dreamed_rgb = self._deprocess(dreamed_target.numpy())
+        return dreamed_rgb
+
+    def _targeted_fgsm_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, epsilon: float = 16/255) -> np.ndarray:
+        """
+        Apply targeted FGSM perturbation to move image toward dreamed target with spatial flipping for enhanced confusion.
+        
+        Args:
+            original_img: Original image (RGB, 0-255)
+            dreamed_target: Dreamed target image (RGB, 0-255)
+            epsilon: Perturbation magnitude (default: 16/255)
+        
+        Returns:
+            Perturbed image
+        """
+        import tensorflow as tf
+        
+        # Resize dreamed target to match original if needed
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        
+        # Create flipped versions of dreamed target for additional confusion
+        dreamed_target_flipped_x = cv2.flip(dreamed_target, 1)  # Flip horizontally
+        dreamed_target_flipped_y = cv2.flip(dreamed_target, 0)  # Flip vertically
+        dreamed_target_flipped_xy = cv2.flip(dreamed_target, -1)  # Flip both
+        
+        # Convert to float32 and normalize to [0, 1]
+        original_float = original_img.astype(np.float32) / 255.0
+        dreamed_float = dreamed_target.astype(np.float32) / 255.0
+        dreamed_flipped_x_float = dreamed_target_flipped_x.astype(np.float32) / 255.0
+        dreamed_flipped_y_float = dreamed_target_flipped_y.astype(np.float32) / 255.0
+        dreamed_flipped_xy_float = dreamed_target_flipped_xy.astype(np.float32) / 255.0
+        
+        # Convert to tensors
+        original_tensor = tf.convert_to_tensor(original_float)
+        dreamed_tensor = tf.convert_to_tensor(dreamed_float)
+        dreamed_flipped_x_tensor = tf.convert_to_tensor(dreamed_flipped_x_float)
+        dreamed_flipped_y_tensor = tf.convert_to_tensor(dreamed_flipped_y_float)
+        dreamed_flipped_xy_tensor = tf.convert_to_tensor(dreamed_flipped_xy_float)
+        
+        # Add batch dimension
+        original_tensor = tf.expand_dims(original_tensor, 0)
+        dreamed_tensor = tf.expand_dims(dreamed_tensor, 0)
+        dreamed_flipped_x_tensor = tf.expand_dims(dreamed_flipped_x_tensor, 0)
+        dreamed_flipped_y_tensor = tf.expand_dims(dreamed_flipped_y_tensor, 0)
+        dreamed_flipped_xy_tensor = tf.expand_dims(dreamed_flipped_xy_tensor, 0)
+        
+        # Preprocess for model
+        original_input = tf.keras.applications.inception_v3.preprocess_input(original_tensor * 255.0)
+        dreamed_input = tf.keras.applications.inception_v3.preprocess_input(dreamed_tensor * 255.0)
+        dreamed_flipped_x_input = tf.keras.applications.inception_v3.preprocess_input(dreamed_flipped_x_tensor * 255.0)
+        dreamed_flipped_y_input = tf.keras.applications.inception_v3.preprocess_input(dreamed_flipped_y_tensor * 255.0)
+        dreamed_flipped_xy_input = tf.keras.applications.inception_v3.preprocess_input(dreamed_flipped_xy_tensor * 255.0)
+        
+        # Compute gradients with respect to input
+        with tf.GradientTape() as tape:
+            tape.watch(original_input)
+            
+            # Get predictions for current input
+            current_preds = self.model(original_input)
+            dreamed_preds = self.model(dreamed_input)
+            dreamed_flipped_x_preds = self.model(dreamed_flipped_x_input)
+            dreamed_flipped_y_preds = self.model(dreamed_flipped_y_input)
+            dreamed_flipped_xy_preds = self.model(dreamed_flipped_xy_input)
+            
+            # Combine losses from original and flipped targets for enhanced confusion
+            # This creates conflicting spatial cues that confuse the model
+            loss_original = tf.reduce_mean(tf.square(current_preds - dreamed_preds))
+            loss_flipped_x = tf.reduce_mean(tf.square(current_preds - dreamed_flipped_x_preds))
+            loss_flipped_y = tf.reduce_mean(tf.square(current_preds - dreamed_flipped_y_preds))
+            loss_flipped_xy = tf.reduce_mean(tf.square(current_preds - dreamed_flipped_xy_preds))
+            
+            # Weighted combination of all losses
+            targeted_loss = (0.4 * loss_original + 
+                           0.2 * loss_flipped_x + 
+                           0.2 * loss_flipped_y + 
+                           0.2 * loss_flipped_xy)
+        
+        # Compute gradients
+        gradients = tape.gradient(targeted_loss, original_input)
+        
+        # Apply FGSM perturbation: move in direction of gradient
+        perturbation = epsilon * tf.sign(gradients)
+        perturbed_input = original_input + perturbation
+        
+        # Clip to valid range
+        perturbed_input = tf.clip_by_value(perturbed_input, -1.0, 1.0)
+        
+        # Convert back to [0, 1] range and remove batch dimension
+        perturbed_tensor = (perturbed_input + 1.0) / 2.0
+        perturbed_tensor = perturbed_tensor[0]
+        
+        # Convert back to uint8
+        perturbed_img = (perturbed_tensor.numpy() * 255).astype(np.uint8)
+        
+        return perturbed_img

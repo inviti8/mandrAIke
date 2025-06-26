@@ -18,7 +18,6 @@ import sys
 import time
 import json
 import numpy as np
-import pandas as pd
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import matplotlib.pyplot as plt
@@ -313,11 +312,21 @@ class MandrAIkEffectivenessTester:
             
             # Map protection strength to numerical value
             strength_map = {
-                'low': 0.3,
-                'medium': 0.5,
-                'high': 0.8
+                'low': 0.05,
+                'medium': 0.1,
+                'high': 0.2
             }
-            strength_value = strength_map.get(protection_strength, 0.5)
+            
+            # Use diffeent strength values for poison method
+            if method == 'poison':
+                poison_strength_map = {
+                    'low': 0.01,
+                    'medium': 0.025,
+                    'high': 0.075
+                }
+                strength_value = poison_strength_map.get(protection_strength, 0.05)
+            else:
+                strength_value = strength_map.get(protection_strength, 0.1)
             
             # Create output path
             output_filename = f"protected_{image_path.stem}_{method}_{protection_strength}.jpg"
@@ -328,7 +337,7 @@ class MandrAIkEffectivenessTester:
                 model_name='InceptionV3',
                 steps=3,
                 step_size=0.5,
-                num_ocataves=3,
+                num_ocataves=2,
                 octave_scale=2.5,
                 layer_name='mixed7'  # Use mixed7 as default
             )
@@ -344,8 +353,22 @@ class MandrAIkEffectivenessTester:
                     output_path=str(output_path),
                     protection_strength=strength_value
                 )
+            elif method == 'fgsm_hallucinogen':
+                mandrAIk.fgsm_hallucinogen(
+                    image_path=str(image_path),
+                    target_image_path1=str(target_image1),
+                    target_image_path2=str(target_image2),
+                    output_path=str(output_path)
+                )
+            elif method == 'poison':
+                mandrAIk.poison(
+                    image_path=str(image_path),
+                    target_image_path=str(target_image1),  # Use first target for poison
+                    output_path=str(output_path),
+                    protection_strength=strength_value
+                )
             else:
-                raise ValueError(f"Method {method} not supported in enhanced version")
+                raise ValueError(f"Unknown method: {method}")
             
             protection_time = time.time() - start_time
             
@@ -439,6 +462,39 @@ class MandrAIkEffectivenessTester:
                         'ssim': quality_metrics['ssim'],
                         'mse': quality_metrics['mse']
                     }
+
+                    # --- Gradient Visualization ---
+                    # Only for TensorFlow models
+                    model = self.models[model_name]
+                    if hasattr(model, 'framework') and model.framework == 'tensorflow':
+                        def compute_saliency_tf(model, image_path, input_size):
+                            import tensorflow as tf
+                            import numpy as np
+                            img = tf.keras.preprocessing.image.load_img(image_path, target_size=input_size)
+                            x = tf.keras.preprocessing.image.img_to_array(img)
+                            x = np.expand_dims(x, axis=0)
+                            x = model.preprocess(x)
+                            x = tf.convert_to_tensor(x)
+                            with tf.GradientTape() as tape:
+                                tape.watch(x)
+                                preds = model.model(x)
+                                class_idx = tf.argmax(preds[0])
+                                loss = preds[0, class_idx]
+                            grads = tape.gradient(loss, x)[0]
+                            saliency = tf.reduce_max(tf.abs(grads), axis=-1)
+                            saliency = (saliency - tf.reduce_min(saliency)) / (tf.reduce_max(saliency) - tf.reduce_min(saliency) + 1e-8)
+                            saliency = (saliency.numpy() * 255).astype(np.uint8)
+                            return saliency
+                        import matplotlib.pyplot as plt
+                        image_stem = image_path.stem
+                        # Original image saliency
+                        saliency_orig = compute_saliency_tf(model, str(image_path), model.input_size)
+                        saliency_orig_path = self.output_dir / f"saliency_{model_name}_{image_stem}_original.png"
+                        plt.imsave(saliency_orig_path, saliency_orig, cmap='hot')
+                        # Protected image saliency
+                        saliency_prot = compute_saliency_tf(model, str(output_path), model.input_size)
+                        saliency_prot_path = self.output_dir / f"saliency_{model_name}_{image_stem}_protected.png"
+                        plt.imsave(saliency_prot_path, saliency_prot, cmap='hot')
             
             return results
             
@@ -457,10 +513,10 @@ class MandrAIkEffectivenessTester:
     def run_comprehensive_test(self, protection_strengths: List[str] = None, methods: List[str] = None) -> Dict:
         """Run comprehensive test with semantic targets."""
         if protection_strengths is None:
-            protection_strengths = ['medium']  # Focus on medium strength
+            protection_strengths = ['low']  # Focus on medium strength
         
         if methods is None:
-            methods = ['hallucinogen']  # Focus on enhanced hallucinogen
+            methods = ['hallucinogen', 'poison']  # Include both methods for comparison
         
         print(f"\nRunning comprehensive test with:")
         print(f"  Protection strengths: {protection_strengths}")

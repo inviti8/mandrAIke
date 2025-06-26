@@ -20,7 +20,7 @@ def main():
                        help='Protection strengths to test (default: all)')
     parser.add_argument('--methods', '-m', nargs='+',
                        default=['poison', 'hallucinogen'],
-                       choices=['poison', 'hallucinogen'],
+                       choices=['poison', 'hallucinogen', 'fgsm_hallucinogen'],
                        help='Protection methods to test (default: all)')
     parser.add_argument('--quick', '-q', action='store_true',
                        help='Quick test with only low strength and poison method')
