@@ -1,4 +1,27 @@
-
 MandrAIk/__pycache__/__init__.cpython-38.pyc
 
 __pycache__/
+
+# Dataset directories
+datasets/
+test_results/
+*.jpg
+*.png
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+
+# Model files and large data
+*.h5
+*.pkl
+*.pth
+*.pt
+*.ckpt
+*.weights
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

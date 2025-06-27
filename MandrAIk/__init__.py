@@ -50,11 +50,14 @@ class MandrAIk:
         # Add other models as needed
 
     def _load_image(self, path):
-        """Load and preprocess image."""
-        img = Image.open(path).convert('RGB')
-        img = img.resize((299, 299))
-        img_array = np.array(img).astype(np.float32)
-        return tf.keras.applications.inception_v3.preprocess_input(img_array)
+        """Load and preprocess image with support for multiple formats (JPG, PNG, etc.)."""
+        try:
+            img = Image.open(path).convert('RGB')
+            img = img.resize((299, 299))
+            img_array = np.array(img).astype(np.float32)
+            return tf.keras.applications.inception_v3.preprocess_input(img_array)
+        except Exception as e:
+            raise ValueError(f"Failed to load image {path}: {e}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
     
     def _dream_target_image(self, target_path: str) -> np.ndarray:
         """Dream the target image to get its amplified features."""
@@ -111,43 +114,6 @@ class MandrAIk:
         
         self.dreamed_target = self._deprocess(dreamed_random.numpy())
     
-    def poison(self, image_path, target_image_path, output_path, protection_strength=0.15, fgsm_epsilon=16/255):
-        """
-        Apply protection to an image using target-dream perturbation with additional FGSM enhancement.
-        
-        Args:
-            image_path: Path to input image
-            target_image_path: Path to target image to dream
-            output_path: Path to save protected image
-            protection_strength: Strength of protection (0.0-1.0)
-            fgsm_epsilon: FGSM perturbation magnitude (default: 16/255)
-        """
-        # Load original image
-        original_img = cv2.imread(image_path)
-        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
-        
-        # Dream the target image if not already done
-        if self.dreamed_target is None:
-            if target_image_path and os.path.exists(target_image_path):
-                self.dreamed_target = self._dream_target_image(target_image_path)
-            else:
-                self._generate_dreamed_target()
-        
-        # Apply targeted perturbation based on dreamed target
-        perturbed_img = self._apply_dreamed_perturbation(
-            original_img, self.dreamed_target, protection_strength
-        )
-        
-        # Apply additional FGSM perturbation for enhanced effectiveness
-        # print(f"  Applying additional FGSM perturbation (epsilon: {fgsm_epsilon:.4f})...")
-        # final_img = self._targeted_fgsm_perturbation(
-        #     perturbed_img, self.dreamed_target, fgsm_epsilon
-        # )
-        
-        # Save protected image
-        self._save_image(final_img, output_path)
-        
-        return final_img
     
     def _apply_dreamed_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
         """
@@ -264,31 +230,21 @@ class MandrAIk:
     
     def dream(self, image_path, output_path=None):
         """
-        Get dream output.
+        Get dream output based on Perlin noise generation.
         
         Args:
-            image_path: Path to input image
-            output_path: Path to save protected image
+            image_path: Path to input image (used for dimensions)
+            output_path: Path to save dreamed image
         """
-        # Load and preprocess image
-        img = self._load_image(image_path)
-        noised_img = self._noised_image(img)
-
-        dreamed_img = self._run_deep_dream(
-            img=noised_img, 
-            steps_per_octave=self.steps,
-            step_size=self.step_size,
-            octaves=self.num_ocataves,
-            octave_scale=self.octave_scale
-        )
-
-        # Convert to RGB and save
-        dreamed_rgb = self._deprocess(dreamed_img.numpy())
+        print("Generating dreamed image from Perlin noise...")
+        
+        # Generate Perlin noise target and dream it (similar to poison method)
+        dreamed_img = self._generate_noise_target(image_path)
         
         if output_path:
-            self._save_image(dreamed_rgb, output_path)
+            self._save_image(dreamed_img, output_path)
         
-        return dreamed_rgb
+        return dreamed_img
     
     def _noised_image(self, img):
         """Add noise to image."""
@@ -360,61 +316,26 @@ class MandrAIk:
         return img
     
     def _save_image(self, img, path):
-        """Save image to path."""
-        cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-    
-    def hallucinogen(self, image_path, target_image_path1, target_image_path2, output_path, protection_strength=0.15):
-        """
-        Apply enhanced chained hallucination protection with multi-space perturbations.
-        
-        Args:
-            image_path: Path to input image
-            target_image_path1: Path to first target image
-            target_image_path2: Path to second target image
-            output_path: Path to save protected image
-            protection_strength: Strength of protection (0.0-1.0)
-        """
-        # Load original image
-        original_img = cv2.imread(image_path)
-        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
-        
-        print(f"Applying enhanced chained hallucination (multi-space)")
-        
-        # Initialize with original image
-        current_img = original_img.copy()
-        chain_steps = 20
-        
-        print(f"Applying enhanced chained hallucination (multi-space)")
-        # Pre-dream both targets to avoid repeated computation
-        print("  Pre-dreaming target images...")
-        dreamed_target1 = self._dream_target_image(target_image_path1)
-        
-        # Dream target2 starting from dreamed_target1 for better coherence
-        print("  Dreaming target2 from dreamed_target1 base...")
-        dreamed_target2 = self._dream_target_image_from_base(target_image_path2, dreamed_target1)
-        base_step_strength = protection_strength * 0.3
-        for step in range(chain_steps):
-            if step < 2:
-                target_name = "Target 1"
-                dreamed_target = dreamed_target1
-                step_strength = base_step_strength * 1.2
-            elif step < 4:
-                target_name = "Target 2" if step % 2 == 0 else "Target 1"
-                dreamed_target = dreamed_target2 if step % 2 == 0 else dreamed_target1
-                step_strength = base_step_strength * 0.8
+        """Save image to path, preserving format based on file extension."""
+        try:
+            # Determine format from file extension
+            ext = os.path.splitext(path)[1].lower()
+            
+            # Convert RGB to BGR for OpenCV
+            img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            
+            # Save with appropriate format
+            if ext in ['.png', '.PNG']:
+                cv2.imwrite(path, img_bgr, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+            elif ext in ['.jpg', '.jpeg', '.JPG', '.JPEG']:
+                cv2.imwrite(path, img_bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
             else:
-                target_name = "Target 2"
-                dreamed_target = dreamed_target2
-                step_strength = base_step_strength * 1.0
-            print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name} (strength: {step_strength:.3f})")
-            current_img = self._apply_dreamed_perturbation_lab(current_img, dreamed_target, step_strength)
-            current_img = self._apply_dreamed_perturbation_hsv(current_img, dreamed_target, step_strength)
-
-        current_img = self._apply_final_enhancement(current_img, protection_strength)
-
-        # Save the final enhanced chained hallucination
-        self._save_image(current_img, output_path)
-        return current_img
+                # Default to PNG for other formats
+                cv2.imwrite(path, img_bgr)
+                
+        except Exception as e:
+            raise ValueError(f"Failed to save image to {path}: {e}")
+    
     
     def _apply_strategic_noise(self, image: np.ndarray, noise_strength: float, step: int) -> np.ndarray:
         """
@@ -470,82 +391,6 @@ class MandrAIk:
         
         return np.clip(final_image, 0, 255).astype(np.uint8)
 
-    def fgsm_hallucinogen(self, image_path, target_image_path1, target_image_path2, output_path, epsilon=8/255, chain_steps=5):
-        """
-        Apply FGSM-style hallucination protection using dreamed targets.
-        Args:
-            image_path: Path to input image
-            target_image_path1: Path to first target image
-            target_image_path2: Path to second target image
-            output_path: Path to save protected image
-            epsilon: Step size for FGSM update (default 8/255)
-            chain_steps: Number of chain steps (default 5)
-        """
-        import tensorflow as tf
-        # Load original image
-        original_img = cv2.imread(image_path)
-        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
-        img_shape = original_img.shape
-        img = original_img.astype(np.float32) / 255.0
-        img = np.expand_dims(img, axis=0)
-        img = tf.convert_to_tensor(img)
-
-        # Pre-dream both targets
-        dreamed_target1 = self._dream_target_image(target_image_path1)
-        
-        # Dream target2 starting from dreamed_target1 for better coherence
-        dreamed_target2 = self._dream_target_image_from_base(target_image_path2, dreamed_target1)
-        dreamed_target1 = cv2.resize(dreamed_target1, (img_shape[1], img_shape[0]))
-        dreamed_target2 = cv2.resize(dreamed_target2, (img_shape[1], img_shape[0]))
-        dreamed_target1 = dreamed_target1.astype(np.float32) / 255.0
-        dreamed_target2 = dreamed_target2.astype(np.float32) / 255.0
-        dreamed_target1 = tf.convert_to_tensor(np.expand_dims(dreamed_target1, axis=0))
-        dreamed_target2 = tf.convert_to_tensor(np.expand_dims(dreamed_target2, axis=0))
-
-        # FGSM chain
-        perturbed = img
-        for step in range(chain_steps):
-            with tf.GradientTape() as tape:
-                tape.watch(perturbed)
-                # Alternate target per step
-                if step % 2 == 0:
-                    loss = tf.reduce_mean(tf.square(perturbed - dreamed_target1))
-                else:
-                    loss = tf.reduce_mean(tf.square(perturbed - dreamed_target2))
-            grad = tape.gradient(loss, perturbed)
-            signed_grad = tf.sign(grad)
-            perturbed = perturbed + epsilon * signed_grad
-            perturbed = tf.clip_by_value(perturbed, 0.0, 1.0)
-
-        final_img = (perturbed[0].numpy() * 255).astype(np.uint8)
-        self._save_image(final_img, output_path)
-        return final_img
-
-    def _dream_target_image_from_base(self, target_path: str, base_image: np.ndarray) -> np.ndarray:
-        """Dream the target image starting from a base image for better coherence."""
-        print(f"Dreaming target image from base: {target_path}")
-        
-        # Load target image
-        target_img = self._load_image(target_path)
-        
-        # Resize base image to match target preprocessing
-        base_resized = cv2.resize(base_image, (299, 299))
-        base_tensor = tf.convert_to_tensor(base_resized.astype(np.float32))
-        base_tensor = tf.keras.applications.inception_v3.preprocess_input(base_tensor)
-        
-        # Run deep dream starting from the base image
-        dreamed_target = self._run_deep_dream(
-            img=base_tensor,
-            steps_per_octave=self.steps,
-            step_size=self.step_size,
-            octaves=self.num_ocataves,
-            octave_scale=self.octave_scale
-        )
-        
-        # Convert to RGB
-        dreamed_rgb = self._deprocess(dreamed_target.numpy())
-        return dreamed_rgb
-
     def _targeted_fgsm_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, epsilon: float = 16/255) -> np.ndarray:
         """
         Apply targeted FGSM perturbation to move image toward dreamed target with spatial flipping for enhanced confusion.
@@ -558,7 +403,6 @@ class MandrAIk:
         Returns:
             Perturbed image
         """
-        import tensorflow as tf
         
         # Resize dreamed target to match original if needed
         if original_img.shape != dreamed_target.shape:
@@ -639,3 +483,262 @@ class MandrAIk:
         perturbed_img = (perturbed_tensor.numpy() * 255).astype(np.uint8)
         
         return perturbed_img
+
+    def _create_perlin_noise(self) -> tf.Tensor:
+        """Create Perlin-like noise for natural patterns optimized for deep dream."""
+        # Simplified Perlin noise approximation optimized for deep dream
+        base_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.03)
+        
+        # Create multiple octaves of noise for natural patterns
+        noise_sum = base_noise[0]
+        amplitude = 1.0
+        frequency = 1.0
+        
+        for i in range(4):  # 4 octaves for rich detail
+            # Create noise at different frequencies
+            freq_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.03 * amplitude)
+            # Apply frequency scaling (simplified)
+            freq_noise = tf.image.resize(freq_noise, (299, 299))
+            noise_sum += freq_noise[0] * amplitude
+            
+            amplitude *= 0.5
+            frequency *= 2.0
+        
+        return noise_sum
+
+    def _generate_noise_target(self, image_path: str) -> np.ndarray:
+        """
+        Generate Perlin noise optimized for deep dream processing.
+        
+        Args:
+            image_path: Path to the input image
+            
+        Returns:
+            Generated Perlin noise image optimized for deep dream
+        """
+        # Load the image to get its dimensions
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
+        
+        # Get image dimensions
+        height, width, channels = img.shape
+        
+        # Create Perlin noise optimized for deep dream
+        noise_tensor = self._create_perlin_noise()
+        
+        # Run deep dream on the noise
+        dreamed_noise = self._run_deep_dream(
+            img=noise_tensor,
+            steps_per_octave=self.steps,
+            step_size=self.step_size,
+            octaves=self.num_ocataves,
+            octave_scale=self.octave_scale
+        )
+        
+        # Convert to RGB format
+        dreamed_rgb = self._deprocess(dreamed_noise.numpy())
+        
+        # Resize to match original image dimensions
+        if dreamed_rgb.shape[:2] != (height, width):
+            dreamed_rgb = cv2.resize(dreamed_rgb, (width, height))
+        
+        return dreamed_rgb
+
+    def _generate_second_noise_target(self, image_path: str) -> np.ndarray:
+        """
+        Generate a second noise target with different characteristics for hallucinogen.
+        
+        Args:
+            image_path: Path to the input image
+            
+        Returns:
+            Generated second noise image with different characteristics
+        """
+        # Load the image to get its dimensions
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
+        
+        # Get image dimensions
+        height, width, channels = img.shape
+        
+        # Create a different type of noise (structured with waves) for variety
+        noise_tensor = self._create_structured_perlin_noise()
+        
+        # Run deep dream on the noise
+        dreamed_noise = self._run_deep_dream(
+            img=noise_tensor,
+            steps_per_octave=self.steps,
+            step_size=self.step_size,
+            octaves=self.num_ocataves,
+            octave_scale=self.octave_scale
+        )
+        
+        # Convert to RGB format
+        dreamed_rgb = self._deprocess(dreamed_noise.numpy())
+        
+        # Resize to match original image dimensions
+        if dreamed_rgb.shape[:2] != (height, width):
+            dreamed_rgb = cv2.resize(dreamed_rgb, (width, height))
+        
+        return dreamed_rgb
+    
+    def _create_structured_perlin_noise(self) -> tf.Tensor:
+        """Create structured Perlin noise with wave patterns for variety."""
+        # Create base Perlin noise
+        base_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.02)
+        
+        # Create multiple octaves with different characteristics
+        noise_sum = base_noise[0]
+        amplitude = 1.0
+        
+        for i in range(3):  # Fewer octaves for different character
+            # Create noise at different frequencies
+            freq_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.02 * amplitude)
+            # Apply frequency scaling
+            freq_noise = tf.image.resize(freq_noise, (299, 299))
+            noise_sum += freq_noise[0] * amplitude
+            
+            amplitude *= 0.7  # Different decay rate
+        
+        # Add wave patterns for structure
+        x = tf.range(299, dtype=tf.float32)
+        y = tf.range(299, dtype=tf.float32)
+        X, Y = tf.meshgrid(x, y)
+        
+        # Create different wave patterns
+        wave1 = tf.sin(X * 0.15) * tf.cos(Y * 0.08) * 0.015
+        wave2 = tf.sin(X * 0.06 + Y * 0.12) * 0.015
+        wave3 = tf.cos(X * 0.03) * tf.sin(Y * 0.09) * 0.015
+        
+        # Add waves to each channel
+        structured_noise = noise_sum + tf.stack([wave1, wave2, wave3], axis=-1)
+        
+        return structured_noise
+    
+    def poison(self, image_path, output_path, protection_strength=0.15, fgsm_epsilon=8/255):
+        """
+        Apply protection to an image using Perlin noise-dream perturbation with FGSM enhancement.
+        
+        Args:
+            image_path: Path to input image
+            output_path: Path to save protected image
+            protection_strength: Strength of protection (0.0-1.0)
+            fgsm_epsilon: FGSM perturbation magnitude (default: 8/255, reduced from 16/255)
+        """
+        # Load original image
+        original_img = cv2.imread(image_path)
+        if original_img is None:
+            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
+        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+        
+        # Generate Perlin noise target and dream it
+        if self.dreamed_target is None:
+            print("Generating dreamed target from Perlin noise...")
+            # The _generate_noise_target method now returns the dreamed target directly
+            self.dreamed_target = self._generate_noise_target(image_path)
+        
+        # Apply targeted perturbation based on dreamed noise target
+        perturbed_img = self._apply_dreamed_perturbation(
+            original_img, self.dreamed_target, protection_strength
+        )
+        
+        # Apply additional FGSM perturbation for enhanced effectiveness
+        print(f"  Applying additional FGSM perturbation (epsilon: {fgsm_epsilon:.4f})...")
+        final_img = self._targeted_fgsm_perturbation(
+            perturbed_img, self.dreamed_target, fgsm_epsilon
+        )
+        
+        # Save protected image
+        self._save_image(final_img, output_path)
+        
+        return final_img
+    
+    def hallucinogen(self, image_path, output_path, protection_strength=0.15):
+        """
+        Apply enhanced chained hallucination protection with multi-space perturbations using noise-generated targets.
+        
+        Args:
+            image_path: Path to input image
+            output_path: Path to save protected image
+            protection_strength: Strength of protection (0.0-1.0)
+        """
+        # Load original image
+        original_img = cv2.imread(image_path)
+        if original_img is None:
+            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
+        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+        
+        print(f"Applying enhanced chained hallucination (multi-space) with noise targets")
+        
+        # Initialize with original image
+        current_img = original_img.copy()
+        chain_steps = 8  # Reduced from 20
+        
+        # Generate two different noise images first
+        print("  Generating noise image 1...")
+        noise_target1 = self._create_perlin_noise()
+        
+        print("  Generating noise image 2...")
+        noise_target2 = self._create_structured_perlin_noise()
+        
+        # Dream each noise image separately with reduced intensity
+        print("  Dreaming noise image 1...")
+        dreamed_target1 = self._run_deep_dream(
+            img=noise_target1,
+            steps_per_octave=2,  # Reduced from self.steps
+            step_size=self.step_size * 0.5,  # Reduced step size
+            octaves=2,  # Reduced from self.num_ocataves
+            octave_scale=self.octave_scale
+        )
+        dreamed_target1 = self._deprocess(dreamed_target1.numpy())
+        
+        print("  Dreaming noise image 2...")
+        dreamed_target2 = self._run_deep_dream(
+            img=noise_target2,
+            steps_per_octave=2,  # Reduced from self.steps
+            step_size=self.step_size * 0.5,  # Reduced step size
+            octaves=2,  # Reduced from self.num_ocataves
+            octave_scale=self.octave_scale
+        )
+        dreamed_target2 = self._deprocess(dreamed_target2.numpy())
+        
+        # Resize dreamed targets to match original image dimensions
+        height, width = original_img.shape[:2]
+        if dreamed_target1.shape[:2] != (height, width):
+            dreamed_target1 = cv2.resize(dreamed_target1, (width, height))
+        if dreamed_target2.shape[:2] != (height, width):
+            dreamed_target2 = cv2.resize(dreamed_target2, (width, height))
+        
+        # Much lower base step strength
+        base_step_strength = protection_strength * 0.08  # Reduced from 0.3
+        
+        for step in range(chain_steps):
+            if step < 2:
+                target_name = "Dreamed Noise 1"
+                dreamed_target = dreamed_target1
+                step_strength = base_step_strength * 1.0  # Reduced from 1.2
+            elif step < 4:
+                target_name = "Dreamed Noise 2" if step % 2 == 0 else "Dreamed Noise 1"
+                dreamed_target = dreamed_target2 if step % 2 == 0 else dreamed_target1
+                step_strength = base_step_strength * 0.6  # Reduced from 0.8
+            else:
+                target_name = "Dreamed Noise 2"
+                dreamed_target = dreamed_target2
+                step_strength = base_step_strength * 0.8  # Reduced from 1.0
+            
+            print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name} (strength: {step_strength:.3f})")
+            
+            # Apply only one perturbation per step, alternating between LAB and HSV
+            if step % 2 == 0:
+                current_img = self._apply_dreamed_perturbation_lab(current_img, dreamed_target, step_strength)
+            else:
+                current_img = self._apply_dreamed_perturbation_hsv(current_img, dreamed_target, step_strength)
+
+        # Remove final enhancement to preserve image quality
+        # current_img = self._apply_final_enhancement(current_img, protection_strength)
+
+        # Save the final enhanced chained hallucination
+        self._save_image(current_img, output_path)
+        return current_img

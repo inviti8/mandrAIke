@@ -185,6 +185,13 @@ class MandrAIkEffectivenessTester:
         # Create output directory
         self.output_dir.mkdir(exist_ok=True)
         
+        # Define strength values for different protection levels
+        self.strength_values = {
+            'low': 0.05,
+            'medium': 0.1,
+            'high': 0.2
+        }
+        
         # Load models (focus on InceptionV3 for consistency)
         self.models = {
             'inception_v3': ModernImageClassifier('inception_v3'),
@@ -305,53 +312,31 @@ class MandrAIkEffectivenessTester:
             return {"psnr": 0.0, "ssim": 0.0, "mse": float('inf')}
     
     def test_single_image(self, image_path: Path, protection_strength: str = 'medium', method: str = 'hallucinogen') -> Dict:
-        """Test protection on a single image with semantic targets."""
+        """Test a single image with specified protection method and strength."""
         try:
-            # Find semantic targets for this image
-            target_image1, target_image2 = self._find_semantic_targets(image_path)
-            
-            # Map protection strength to numerical value
-            strength_map = {
-                'low': 0.05,
-                'medium': 0.1,
-                'high': 0.2
-            }
-            
-            # Use diffeent strength values for poison method
-            if method == 'poison':
-                poison_strength_map = {
-                    'low': 0.01,
-                    'medium': 0.025,
-                    'high': 0.075
-                }
-                strength_value = poison_strength_map.get(protection_strength, 0.05)
+            # Find semantic targets for this image (skip for poison and hallucinogen)
+            if method not in ['poison', 'hallucinogen']:
+                target_image1, target_image2 = self._find_semantic_targets(image_path)
+                if not target_image1 or not target_image2:
+                    print(f"  No semantic targets found for {image_path.name}")
+                    return {}
             else:
-                strength_value = strength_map.get(protection_strength, 0.1)
+                target_image1, target_image2 = None, None
             
-            # Create output path
-            output_filename = f"protected_{image_path.stem}_{method}_{protection_strength}.jpg"
-            output_path = self.output_dir / output_filename
+            # Set up output path
+            output_path = self.output_dir / f"protected_{image_path.stem}_{method}_{protection_strength}{image_path.suffix}"
             
-            # Initialize MandrAIk with mixed7 layer (best performing)
-            mandrAIk = MandrAIk(
-                model_name='InceptionV3',
-                steps=3,
-                step_size=0.5,
-                num_ocataves=2,
-                octave_scale=2.5,
-                layer_name='mixed7'  # Use mixed7 as default
-            )
+            # Initialize MandrAIk
+            mandrAIk = MandrAIk()
             
-            # Apply protection
+            # Apply protection based on method
             start_time = time.time()
             
             if method == 'hallucinogen':
                 mandrAIk.hallucinogen(
                     image_path=str(image_path),
-                    target_image_path1=str(target_image1),
-                    target_image_path2=str(target_image2),
                     output_path=str(output_path),
-                    protection_strength=strength_value
+                    protection_strength=self.strength_values[protection_strength]
                 )
             elif method == 'fgsm_hallucinogen':
                 mandrAIk.fgsm_hallucinogen(
@@ -363,9 +348,8 @@ class MandrAIkEffectivenessTester:
             elif method == 'poison':
                 mandrAIk.poison(
                     image_path=str(image_path),
-                    target_image_path=str(target_image1),  # Use first target for poison
                     output_path=str(output_path),
-                    protection_strength=strength_value
+                    protection_strength=self.strength_values[protection_strength]
                 )
             else:
                 raise ValueError(f"Unknown method: {method}")
@@ -375,12 +359,12 @@ class MandrAIkEffectivenessTester:
             # Test with all models
             results = {
                 'image_path': str(image_path),
-                'target_image1': str(target_image1),
-                'target_image2': str(target_image2),
+                'target_image1': str(target_image1) if method not in ['poison', 'hallucinogen'] else None,
+                'target_image2': str(target_image2) if method not in ['poison', 'hallucinogen'] else None,
                 'method': method,
                 'protected_path': str(output_path),
                 'protection_strength': protection_strength,
-                'strength_value': strength_value,
+                'strength_value': self.strength_values[protection_strength],
                 'protection_time': protection_time,
                 'layer_used': 'mixed7',
                 'models': {}
@@ -516,7 +500,7 @@ class MandrAIkEffectivenessTester:
             protection_strengths = ['low']  # Focus on medium strength
         
         if methods is None:
-            methods = ['hallucinogen', 'poison']  # Include both methods for comparison
+            methods = ['hallucinogen', 'poison']  # Include all methods for comparison
         
         print(f"\nRunning comprehensive test with:")
         print(f"  Protection strengths: {protection_strengths}")
