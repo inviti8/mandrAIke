@@ -6,6 +6,9 @@ import numpy as np
 from PIL import Image
 import cv2
 import random
+import scipy.fftpack as fftpack
+import json
+from scipy.fft import fft2, ifft2
 
 FILE_PATH = Path(__file__).parent
 
@@ -95,12 +98,16 @@ class MandrAIk:
         
         return img
     
-    def _generate_dreamed_target(self):
-        """Generate dreamed target from random noise if no target image provided."""
+    def _generate_dreamed_target(self, target_shape=None):
+        """Generate dreamed target from random noise at the target resolution."""
         print("No target image provided. Generating dreamed target from random noise...")
         
-        # Create random noise as target
-        random_target = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.1)
+        # Use target_shape if provided, otherwise default to 299x299
+        if target_shape is None:
+            target_shape = (299, 299, 3)
+        
+        # Create random noise as target at the correct resolution
+        random_target = tf.random.normal((1, target_shape[0], target_shape[1], 3), mean=0.0, stddev=0.1)
         random_target = tf.squeeze(random_target, axis=0)
         
         # Dream the random noise
@@ -281,13 +288,6 @@ class MandrAIk:
         draw.text((x, y), msg, fill=(255, 255, 255), font=font)  # White text
         
         return np.array(pil_img)
-    
-    def _apply_adversarial_noise(self, image, noise_level="Min"):
-        """Apply adversarial noise to image."""
-        noise_levels = {"Min": 0.05, "Medium": 0.1, "Max": 0.2}
-        noise = np.random.normal(0, noise_levels[noise_level] * 255, image.shape)
-        noisy_image = np.clip(image + noise, 0, 255).astype(np.uint8)
-        return noisy_image
 
     def _calc_loss(self, img, model):
         """Calculate loss for deep dream."""
@@ -453,7 +453,6 @@ class MandrAIk:
             dreamed_flipped_xy_preds = self.model(dreamed_flipped_xy_input)
             
             # Combine losses from original and flipped targets for enhanced confusion
-            # This creates conflicting spatial cues that confuse the model
             loss_original = tf.reduce_mean(tf.square(current_preds - dreamed_preds))
             loss_flipped_x = tf.reduce_mean(tf.square(current_preds - dreamed_flipped_x_preds))
             loss_flipped_y = tf.reduce_mean(tf.square(current_preds - dreamed_flipped_y_preds))
@@ -484,10 +483,19 @@ class MandrAIk:
         
         return perturbed_img
 
-    def _create_perlin_noise(self) -> tf.Tensor:
-        """Create Perlin-like noise for natural patterns optimized for deep dream."""
+    def _create_perlin_noise(self, width: int = 299, height: int = 299) -> tf.Tensor:
+        """
+        Create Perlin-like noise for natural patterns optimized for deep dream.
+        
+        Args:
+            width: Width of the noise image (default: 299)
+            height: Height of the noise image (default: 299)
+            
+        Returns:
+            Generated Perlin noise tensor of specified dimensions
+        """
         # Simplified Perlin noise approximation optimized for deep dream
-        base_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.03)
+        base_noise = tf.random.normal((1, height, width, 3), mean=0.0, stddev=0.03)
         
         # Create multiple octaves of noise for natural patterns
         noise_sum = base_noise[0]
@@ -496,9 +504,9 @@ class MandrAIk:
         
         for i in range(4):  # 4 octaves for rich detail
             # Create noise at different frequencies
-            freq_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.03 * amplitude)
+            freq_noise = tf.random.normal((1, height, width, 3), mean=0.0, stddev=0.03 * amplitude)
             # Apply frequency scaling (simplified)
-            freq_noise = tf.image.resize(freq_noise, (299, 299))
+            freq_noise = tf.image.resize(freq_noise, (height, width))
             noise_sum += freq_noise[0] * amplitude
             
             amplitude *= 0.5
@@ -508,86 +516,179 @@ class MandrAIk:
 
     def _generate_noise_target(self, image_path: str) -> np.ndarray:
         """
-        Generate Perlin noise optimized for deep dream processing.
-        
+        Generate a noise target using Perlin noise for protection.
         Args:
-            image_path: Path to the input image
-            
+            image_path: Path to the original image (for size reference)
         Returns:
-            Generated Perlin noise image optimized for deep dream
+            Dreamed noise target as numpy array
         """
-        # Load the image to get its dimensions
-        img = cv2.imread(image_path)
-        if img is None:
-            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
-        
-        # Get image dimensions
-        height, width, channels = img.shape
-        
-        # Create Perlin noise optimized for deep dream
-        noise_tensor = self._create_perlin_noise()
-        
-        # Run deep dream on the noise
-        dreamed_noise = self._run_deep_dream(
-            img=noise_tensor,
-            steps_per_octave=self.steps,
-            step_size=self.step_size,
-            octaves=self.num_ocataves,
-            octave_scale=self.octave_scale
-        )
-        
-        # Convert to RGB format
-        dreamed_rgb = self._deprocess(dreamed_noise.numpy())
-        
-        # Resize to match original image dimensions
-        if dreamed_rgb.shape[:2] != (height, width):
-            dreamed_rgb = cv2.resize(dreamed_rgb, (width, height))
-        
-        return dreamed_rgb
+        # Load original image to get dimensions
+        original_img = cv2.imread(image_path)
+        if original_img is None:
+            raise ValueError(f"Failed to load image {image_path}")
+        height, width = original_img.shape[:2]
+        # Generate dreamed target at the original image's resolution
+        self._generate_dreamed_target(target_shape=(height, width, 3))
+        return self.dreamed_target
 
-    def _generate_second_noise_target(self, image_path: str) -> np.ndarray:
+    def _compute_gradients(self, image: np.ndarray, model) -> np.ndarray:
         """
-        Generate a second noise target with different characteristics for hallucinogen.
+        Compute gradients of the model output with respect to the input image.
         
         Args:
-            image_path: Path to the input image
+            image: Input image (preprocessed for model)
+            model: TensorFlow model
+        
+        Returns:
+            Gradient tensor
+        """
+        with tf.GradientTape() as tape:
+            tape.watch(image)
+            output = model(image)
+            # Use the mean activation as loss
+            loss = tf.reduce_mean(output)
+        
+        gradients = tape.gradient(loss, image)
+        return gradients
+
+    def _create_dream_based_mask(self, original_img: np.ndarray, dreamed_target: np.ndarray) -> np.ndarray:
+        """
+        Create perturbation mask based on dream target patterns.
+        
+        Args:
+            original_img: Original image (RGB, 0-255)
+            dreamed_target: Dreamed target image (RGB, 0-255)
+        
+        Returns:
+            Mask for applying perturbations (0.0-1.0)
+        """
+        # Ensure same size
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        
+        # Convert to grayscale for pattern analysis
+        dream_gray = cv2.cvtColor(dreamed_target, cv2.COLOR_RGB2GRAY)
+        orig_gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY)
+        
+        # Compute difference to find dream patterns
+        pattern_diff = np.abs(dream_gray.astype(np.float32) - orig_gray.astype(np.float32))
+        
+        # Normalize pattern differences
+        pattern_mask = pattern_diff / (pattern_diff.max() + 1e-8)
+        
+        # Apply more aggressive Gaussian smoothing for natural transitions
+        pattern_mask = cv2.GaussianBlur(pattern_mask, (21, 21), 5)
+        
+        # Create more aggressive threshold - focus on top 20% of patterns
+        threshold = np.percentile(pattern_mask, 80)  # Top 20% of patterns get strong perturbation
+        
+        # Create mask with more aggressive transitions
+        mask = np.where(pattern_mask > threshold, 1.0, 0.1)  # Strong vs weak perturbation
+        
+        # Add high-frequency emphasis using Laplacian
+        laplacian = cv2.Laplacian(orig_gray, cv2.CV_64F)
+        laplacian = np.abs(laplacian)
+        laplacian = laplacian / (laplacian.max() + 1e-8)
+        
+        # Combine pattern mask with high-frequency emphasis
+        combined_mask = mask * 0.7 + laplacian * 0.3
+        combined_mask = np.clip(combined_mask, 0.1, 1.0)
+        
+        # Ensure mask has same dimensions as image
+        combined_mask = np.stack([combined_mask] * 3, axis=-1)  # Apply to all channels
+        
+        return combined_mask
+
+    def _apply_masked_gradient_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, 
+                                          protection_strength: float, model) -> np.ndarray:
+        """
+        Apply gradient-guided perturbation using dream-based mask for maximum effectiveness.
+        
+        Args:
+            original_img: Original image (RGB, 0-255)
+            dreamed_target: Dreamed target image (RGB, 0-255)
+            protection_strength: Strength of perturbation (0.0-1.0)
+            model: TensorFlow model for gradient computation
+        
+        Returns:
+            Perturbed image
+        """
+        # Create mask from dream target patterns
+        mask = self._create_dream_based_mask(original_img, dreamed_target)
+        
+        # Ensure dreamed target is the same size as original image
+        if dreamed_target.shape != original_img.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        
+        # Preprocess image for model
+        img_for_model = self._load_image_from_array(original_img)
+        
+        # Compute gradients
+        gradients = self._compute_gradients(img_for_model, model)
+        
+        # Convert gradients to numpy and normalize
+        grad_np = gradients.numpy()
+        # Remove batch dimension if present
+        if grad_np.ndim == 4:
+            grad_np = grad_np[0]  # Remove batch dimension
+        grad_np = np.abs(grad_np)  # Use absolute values
+        grad_np = grad_np / (np.max(grad_np) + 1e-8)  # Normalize
+        
+        # Resize gradients to match image size, channel-wise
+        if grad_np.shape[:2] != (original_img.shape[0], original_img.shape[1]):
+            grad_resized = np.stack([
+                cv2.resize(grad_np[..., c], (original_img.shape[1], original_img.shape[0]), interpolation=cv2.INTER_LINEAR)
+                for c in range(grad_np.shape[-1])
+            ], axis=-1)
+        else:
+            grad_resized = grad_np
+        
+        # Apply masked gradient perturbation
+        gradient_perturbation = grad_resized * protection_strength * 0.4 * mask
+        
+        # Apply masked dreamed target perturbation
+        dreamed_perturbation = (dreamed_target.astype(np.float32) - original_img.astype(np.float32)) * protection_strength * 0.6 * mask
+        
+        # Combine perturbations
+        perturbed = original_img.astype(np.float32) + dreamed_perturbation + gradient_perturbation
+        perturbed = np.clip(perturbed, 0, 255).astype(np.uint8)
+        
+        return perturbed
+
+    def _load_image_from_array(self, img_array: np.ndarray) -> tf.Tensor:
+        """
+        Load image from numpy array for model input.
+        
+        Args:
+            img_array: Image as numpy array (RGB, 0-255)
+        
+        Returns:
+            Preprocessed tensor for model
+        """
+        # Resize to model input size
+        img_resized = cv2.resize(img_array, (299, 299))
+        
+        # Preprocess for InceptionV3
+        img_preprocessed = tf.keras.applications.inception_v3.preprocess_input(img_resized)
+        
+        # Add batch dimension
+        img_tensor = tf.expand_dims(img_preprocessed, axis=0)
+        
+        return img_tensor
+
+    def _create_structured_perlin_noise(self, width: int = 299, height: int = 299) -> tf.Tensor:
+        """
+        Create structured Perlin noise with wave patterns for variety.
+        
+        Args:
+            width: Width of the noise image (default: 299)
+            height: Height of the noise image (default: 299)
             
         Returns:
-            Generated second noise image with different characteristics
+            Generated structured Perlin noise tensor of specified dimensions
         """
-        # Load the image to get its dimensions
-        img = cv2.imread(image_path)
-        if img is None:
-            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
-        
-        # Get image dimensions
-        height, width, channels = img.shape
-        
-        # Create a different type of noise (structured with waves) for variety
-        noise_tensor = self._create_structured_perlin_noise()
-        
-        # Run deep dream on the noise
-        dreamed_noise = self._run_deep_dream(
-            img=noise_tensor,
-            steps_per_octave=self.steps,
-            step_size=self.step_size,
-            octaves=self.num_ocataves,
-            octave_scale=self.octave_scale
-        )
-        
-        # Convert to RGB format
-        dreamed_rgb = self._deprocess(dreamed_noise.numpy())
-        
-        # Resize to match original image dimensions
-        if dreamed_rgb.shape[:2] != (height, width):
-            dreamed_rgb = cv2.resize(dreamed_rgb, (width, height))
-        
-        return dreamed_rgb
-    
-    def _create_structured_perlin_noise(self) -> tf.Tensor:
-        """Create structured Perlin noise with wave patterns for variety."""
         # Create base Perlin noise
-        base_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.02)
+        base_noise = tf.random.normal((1, height, width, 3), mean=0.0, stddev=0.02)
         
         # Create multiple octaves with different characteristics
         noise_sum = base_noise[0]
@@ -595,16 +696,16 @@ class MandrAIk:
         
         for i in range(3):  # Fewer octaves for different character
             # Create noise at different frequencies
-            freq_noise = tf.random.normal((1, 299, 299, 3), mean=0.0, stddev=0.02 * amplitude)
+            freq_noise = tf.random.normal((1, height, width, 3), mean=0.0, stddev=0.02 * amplitude)
             # Apply frequency scaling
-            freq_noise = tf.image.resize(freq_noise, (299, 299))
+            freq_noise = tf.image.resize(freq_noise, (height, width))
             noise_sum += freq_noise[0] * amplitude
             
             amplitude *= 0.7  # Different decay rate
         
         # Add wave patterns for structure
-        x = tf.range(299, dtype=tf.float32)
-        y = tf.range(299, dtype=tf.float32)
+        x = tf.range(width, dtype=tf.float32)
+        y = tf.range(height, dtype=tf.float32)
         X, Y = tf.meshgrid(x, y)
         
         # Create different wave patterns
@@ -617,15 +718,107 @@ class MandrAIk:
         
         return structured_noise
     
-    def poison(self, image_path, output_path, protection_strength=0.15, fgsm_epsilon=8/255):
+    def _create_organic_lines_noise(self, width: int = 299, height: int = 299) -> np.ndarray:
+        """
+        Create organic lines noise pattern for linear noise type.
+        
+        Args:
+            width: Width of the noise image
+            height: Height of the noise image
+            
+        Returns:
+            Generated organic lines noise array
+        """
+        # Create base noise
+        noise = np.random.normal(0, 0.02, (height, width, 3))
+        
+        # Create organic line patterns using sine waves with varying frequencies
+        x = np.arange(width)
+        y = np.arange(height)
+        X, Y = np.meshgrid(x, y)
+        
+        # Create multiple organic line patterns
+        lines1 = np.sin(X * 0.1 + Y * 0.05) * np.cos(Y * 0.08) * 0.02
+        lines2 = np.sin(X * 0.06 + Y * 0.12) * np.sin(Y * 0.04) * 0.015
+        lines3 = np.cos(X * 0.08) * np.sin(Y * 0.1 + X * 0.03) * 0.018
+        
+        # Combine line patterns
+        organic_lines = lines1 + lines2 + lines3
+        
+        # Add to each channel with slight variations
+        organic_noise = noise + np.stack([organic_lines * 1.0, 
+                                        organic_lines * 0.8, 
+                                        organic_lines * 1.2], axis=-1)
+        
+        return organic_noise
+    
+    def _create_artistic_strokes_noise(self, width: int = 299, height: int = 299) -> np.ndarray:
+        """
+        Create artistic strokes noise pattern for linear noise type.
+        
+        Args:
+            width: Width of the noise image
+            height: Height of the noise image
+            
+        Returns:
+            Generated artistic strokes noise array
+        """
+        # Create base noise
+        noise = np.random.normal(0, 0.015, (height, width, 3))
+        
+        # Create artistic stroke patterns using more complex wave functions
+        x = np.arange(width)
+        y = np.arange(height)
+        X, Y = np.meshgrid(x, y)
+        
+        # Create brush stroke patterns
+        strokes1 = np.sin(X * 0.12) * np.cos(Y * 0.06 + X * 0.04) * 0.025
+        strokes2 = np.cos(X * 0.05 + Y * 0.09) * np.sin(Y * 0.11) * 0.02
+        strokes3 = np.sin(X * 0.08 + Y * 0.07) * np.cos(Y * 0.05) * 0.022
+        
+        # Create cross-hatching effect
+        hatching1 = np.sin(X * 0.15) * np.sin(Y * 0.15) * 0.01
+        hatching2 = np.cos(X * 0.1 + Y * 0.1) * 0.008
+        
+        # Combine stroke patterns
+        artistic_strokes = strokes1 + strokes2 + strokes3 + hatching1 + hatching2
+        
+        # Add to each channel with artistic variations
+        artistic_noise = noise + np.stack([artistic_strokes * 1.1, 
+                                         artistic_strokes * 0.9, 
+                                         artistic_strokes * 1.0], axis=-1)
+        
+        return artistic_noise
+    
+    def _generate_linear_noise_target(self, image_path: str) -> np.ndarray:
+        """
+        Generate combined organic lines and artistic strokes noise optimized for deep dream processing.
+        Args:
+            image_path: Path to the input image
+        Returns:
+            Generated combined organic-artistic noise image optimized for deep dream
+        """
+        # Load the image to get its dimensions
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
+        height, width, channels = img.shape
+        # Generate dreamed target at the original image's resolution
+        self._generate_dreamed_target(target_shape=(height, width, 3))
+        return self.dreamed_target
+
+    def poison(self, image_path, output_path, protection_strength=0.15, fgsm_epsilon=4/255, noise_type='perlin', frequency_band='high'):
         """
         Apply protection to an image using Perlin noise-dream perturbation with FGSM enhancement.
+        Now supports gradient-guided perturbations for maximum model confusion.
         
         Args:
             image_path: Path to input image
             output_path: Path to save protected image
             protection_strength: Strength of protection (0.0-1.0)
             fgsm_epsilon: FGSM perturbation magnitude (default: 8/255, reduced from 16/255)
+            noise_type: Type of noise to use ('perlin', 'linear', or 'fourier')
+            frequency_band: Frequency band for Fourier perturbation ('low', 'mid', 'high', 'all')
         """
         # Load original image
         original_img = cv2.imread(image_path)
@@ -633,112 +826,360 @@ class MandrAIk:
             raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
         original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
         
-        # Generate Perlin noise target and dream it
-        if self.dreamed_target is None:
-            print("Generating dreamed target from Perlin noise...")
-            # The _generate_noise_target method now returns the dreamed target directly
-            self.dreamed_target = self._generate_noise_target(image_path)
+        # Generate noise target based on type
+        if noise_type == 'fourier':
+            print(f"Generating optimized Fourier noise target...")
+            dreamed_target = self._generate_fourier_noise_target(image_path)
+        elif noise_type == 'linear':
+            dreamed_target = self._generate_linear_noise_target(image_path)
+        else:  # perlin (default)
+            dreamed_target = self._generate_noise_target(image_path)
         
-        # Apply targeted perturbation based on dreamed noise target
-        perturbed_img = self._apply_dreamed_perturbation(
-            original_img, self.dreamed_target, protection_strength
+        # Apply gradient-guided perturbation for maximum model confusion
+        print("  Applying gradient-guided perturbation...")
+        perturbed_img = self._apply_masked_gradient_perturbation(
+            original_img, dreamed_target, protection_strength, self.model
         )
         
-        # Apply additional FGSM perturbation for enhanced effectiveness
-        print(f"  Applying additional FGSM perturbation (epsilon: {fgsm_epsilon:.4f})...")
-        final_img = self._targeted_fgsm_perturbation(
-            perturbed_img, self.dreamed_target, fgsm_epsilon
-        )
+        # Apply FGSM perturbation for additional robustness
+        final_img = self._targeted_fgsm_perturbation(perturbed_img, dreamed_target, fgsm_epsilon)
         
-        # Save protected image
+        # Apply final Fourier perturbation pass for additional effectiveness
+        print("  Applying final Fourier perturbation pass...")
+        final_img = self._apply_fourier_perturbation(final_img, dreamed_target, protection_strength * 0.3, frequency_band)
+        
+        # Save the protected image
         self._save_image(final_img, output_path)
         
         return final_img
     
-    def hallucinogen(self, image_path, output_path, protection_strength=0.15):
+    def _apply_fourier_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float, frequency_band: str = 'high') -> np.ndarray:
         """
-        Apply enhanced chained hallucination protection with multi-space perturbations using noise-generated targets.
+        Apply perturbation in Fourier domain.
         
         Args:
-            image_path: Path to input image
-            output_path: Path to save protected image
-            protection_strength: Strength of protection (0.0-1.0)
+            original_img: Original image (RGB, 0-255)
+            dreamed_target: Dreamed target image (RGB, 0-255)
+            protection_strength: Strength of perturbation (0.0-1.0)
+            frequency_band: Which frequency band to target ('low', 'mid', 'high', 'all')
+        
+        Returns:
+            Perturbed image
         """
-        # Load original image
-        original_img = cv2.imread(image_path)
-        if original_img is None:
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        
+        height, width, channels = original_img.shape
+        
+        # Convert to float32 for FFT
+        original_float = original_img.astype(np.float32) / 255.0
+        dreamed_float = dreamed_target.astype(np.float32) / 255.0
+        
+        # Apply FFT to each channel
+        perturbed_channels = []
+        
+        for c in range(channels):
+            # FFT of original and dreamed channels
+            orig_fft = fft2(original_float[:, :, c])
+            dream_fft = fft2(dreamed_float[:, :, c])
+            
+            # Create frequency mask based on frequency_band
+            freq_mask = self._create_frequency_mask(height, width, frequency_band)
+            
+            # Calculate perturbation in frequency domain
+            fft_diff = dream_fft - orig_fft
+            
+            # Apply frequency mask and perturbation strength
+            perturbation = fft_diff * freq_mask * protection_strength
+            
+            # Apply perturbation
+            perturbed_fft = orig_fft + perturbation
+            
+            # Inverse FFT
+            perturbed_channel = np.real(ifft2(perturbed_fft))
+            
+            # Clip to valid range
+            perturbed_channel = np.clip(perturbed_channel, 0, 1)
+            perturbed_channels.append(perturbed_channel)
+        
+        # Combine channels and convert back to uint8
+        perturbed_img = np.stack(perturbed_channels, axis=-1)
+        perturbed_img = (perturbed_img * 255).astype(np.uint8)
+        
+        return perturbed_img
+    
+    def _create_frequency_mask(self, height: int, width: int, frequency_band: str) -> np.ndarray:
+        """
+        Create frequency mask optimized for high-frequency protection.
+        Prioritizes high-frequency components for maximum effectiveness.
+        
+        Args:
+            height: Image height
+            width: Image width
+            frequency_band: Frequency band to target ('low', 'mid', 'high', 'all')
+        
+        Returns:
+            Frequency mask array
+        """
+        # Create frequency coordinates
+        u = np.fft.fftfreq(width)
+        v = np.fft.fftfreq(height)
+        U, V = np.meshgrid(u, v)
+        
+        # Calculate frequency magnitude
+        freq_mag = np.sqrt(U**2 + V**2)
+        max_freq = np.sqrt(0.5**2 + 0.5**2)
+        freq_mag = freq_mag / max_freq
+        
+        # Create optimized frequency masks with high-frequency emphasis
+        if frequency_band == 'low':
+            # Low frequency mask (reduced emphasis)
+            mask = np.where(freq_mag < 0.2, 1.0, 0.0)
+        elif frequency_band == 'mid':
+            # Mid frequency mask (moderate emphasis)
+            mask = np.where((freq_mag >= 0.2) & (freq_mag < 0.4), 1.0, 0.0)
+        elif frequency_band == 'high':
+            # High frequency mask (strong emphasis - optimized for effectiveness)
+            mask = np.where(freq_mag >= 0.3, 1.0, 0.0)
+            # Add extra emphasis to very high frequencies
+            very_high_mask = np.where(freq_mag >= 0.45, 1.5, 1.0)
+            mask *= very_high_mask
+        elif frequency_band == 'all':
+            # All frequencies mask (with high-frequency emphasis)
+            mask = np.ones_like(freq_mag)
+            # Boost high frequencies
+            high_boost = np.where(freq_mag >= 0.3, 1.3, 1.0)
+            mask *= high_boost
+        else:
+            # Default to high frequency
+            mask = np.where(freq_mag >= 0.3, 1.0, 0.0)
+        
+        # Apply smoothing to avoid artifacts
+        mask = self._smooth_frequency_mask(mask, frequency_band)
+        
+        return mask
+    
+    def _smooth_frequency_mask(self, mask: np.ndarray, frequency_band: str) -> np.ndarray:
+        """
+        Apply smooth transition to frequency mask to avoid artifacts.
+        
+        Args:
+            mask: Binary frequency mask
+            frequency_band: Frequency band type
+        
+        Returns:
+            Smoothed frequency mask
+        """
+        # Apply Gaussian smoothing to create smooth transitions
+        from scipy.ndimage import gaussian_filter
+        
+        # Smooth the mask
+        smoothed_mask = gaussian_filter(mask.astype(np.float32), sigma=2.0)
+        
+        # Normalize to [0, 1]
+        if smoothed_mask.max() > 0:
+            smoothed_mask = smoothed_mask / smoothed_mask.max()
+        
+        return smoothed_mask
+    
+    def _apply_adaptive_fourier_perturbation(self, original_img: np.ndarray, dreamed_target: np.ndarray, protection_strength: float) -> np.ndarray:
+        """
+        Apply adaptive Fourier perturbation that targets the most effective frequency bands.
+        
+        Args:
+            original_img: Original image (RGB, 0-255)
+            dreamed_target: Dreamed target image (RGB, 0-255)
+            protection_strength: Strength of perturbation (0.0-1.0)
+        
+        Returns:
+            Perturbed image
+        """
+        if original_img.shape != dreamed_target.shape:
+            dreamed_target = cv2.resize(dreamed_target, (original_img.shape[1], original_img.shape[0]))
+        
+        height, width, channels = original_img.shape
+        
+        # Convert to float32 for FFT
+        original_float = original_img.astype(np.float32) / 255.0
+        dreamed_float = dreamed_target.astype(np.float32) / 255.0
+        
+        # Apply FFT to each channel
+        perturbed_channels = []
+        
+        for c in range(channels):
+            # FFT of original and dreamed channels
+            orig_fft = fft2(original_float[:, :, c])
+            dream_fft = fft2(dreamed_float[:, :, c])
+            
+            # Calculate frequency-dependent perturbation strength
+            adaptive_strength = self._calculate_adaptive_strength(orig_fft, dream_fft, protection_strength)
+            
+            # Calculate perturbation in frequency domain
+            fft_diff = dream_fft - orig_fft
+            
+            # Apply adaptive perturbation
+            perturbation = fft_diff * adaptive_strength
+            
+            # Apply perturbation
+            perturbed_fft = orig_fft + perturbation
+            
+            # Inverse FFT
+            perturbed_channel = np.real(ifft2(perturbed_fft))
+            
+            # Clip to valid range
+            perturbed_channel = np.clip(perturbed_channel, 0, 1)
+            perturbed_channels.append(perturbed_channel)
+        
+        # Combine channels and convert back to uint8
+        perturbed_img = np.stack(perturbed_channels, axis=-1)
+        perturbed_img = (perturbed_img * 255).astype(np.uint8)
+        
+        return perturbed_img
+    
+    def _calculate_adaptive_strength(self, orig_fft: np.ndarray, dream_fft: np.ndarray, base_strength: float) -> np.ndarray:
+        """
+        Calculate adaptive perturbation strength optimized for high-frequency protection.
+        Prioritizes high-frequency components for maximum effectiveness.
+        
+        Args:
+            orig_fft: FFT of original image channel
+            dream_fft: FFT of dreamed target channel
+            base_strength: Base protection strength
+        
+        Returns:
+            Adaptive strength mask optimized for high frequencies
+        """
+        height, width = orig_fft.shape
+        
+        # Create frequency coordinates
+        u = np.fft.fftfreq(width)
+        v = np.fft.fftfreq(height)
+        U, V = np.meshgrid(u, v)
+        
+        # Calculate frequency magnitude
+        freq_mag = np.sqrt(U**2 + V**2)
+        max_freq = np.sqrt(0.5**2 + 0.5**2)
+        freq_mag = freq_mag / max_freq
+        
+        # Calculate magnitude difference
+        mag_diff = np.abs(dream_fft) - np.abs(orig_fft)
+        
+        # Create adaptive strength mask with high-frequency emphasis
+        # Higher strength for frequencies with larger differences
+        adaptive_mask = np.abs(mag_diff) / (np.abs(orig_fft) + 1e-8)
+        adaptive_mask = np.clip(adaptive_mask, 0, 1)
+        
+        # Enhanced frequency weighting for high frequencies
+        # Use exponential weighting to strongly favor high frequencies
+        freq_weight = freq_mag ** 0.3  # Reduced exponent for stronger high-frequency emphasis
+        
+        # Add extra boost for very high frequencies
+        very_high_boost = np.where(freq_mag >= 0.4, 1.5, 1.0)
+        freq_weight *= very_high_boost
+        
+        # Combine factors with increased emphasis on high frequencies
+        adaptive_strength = base_strength * adaptive_mask * freq_weight
+        
+        # Apply additional high-frequency boost
+        high_freq_boost = np.where(freq_mag >= 0.35, 1.2, 1.0)
+        adaptive_strength *= high_freq_boost
+        
+        return adaptive_strength
+    
+    def _create_fourier_noise(self, width: int = 299, height: int = 299) -> np.ndarray:
+        """
+        Create Fourier domain noise optimized for high-frequency deep dream processing.
+        Focuses on strong high-frequency components for maximum effectiveness.
+        
+        Args:
+            width: Width of the noise image
+            height: Height of the noise image
+            
+        Returns:
+            Generated high-frequency Fourier noise array
+        """
+        # Create base noise with higher intensity for high frequencies
+        freq_noise = np.random.normal(0, 0.05, (height, width, 3))  # Increased from 0.02
+        
+        # Apply frequency-domain patterns optimized for high frequencies
+        u = np.fft.fftfreq(width)
+        v = np.fft.fftfreq(height)
+        U, V = np.meshgrid(u, v)
+        
+        # Calculate frequency magnitude
+        freq_mag = np.sqrt(U**2 + V**2)
+        max_freq = np.sqrt(0.5**2 + 0.5**2)
+        freq_mag = freq_mag / max_freq
+        
+        # Create high-frequency emphasis mask
+        # Strong emphasis on high frequencies (freq_mag > 0.3)
+        high_freq_mask = np.where(freq_mag > 0.3, 1.0, 0.1)
+        
+        # Create different high-frequency patterns for each channel
+        for c in range(3):
+            # High-frequency sine/cosine patterns with increased amplitude
+            freq_pattern = np.sin(U * 20 + c * 3) * np.cos(V * 15 + c * 4) * 0.03  # Increased from 0.01
+            freq_pattern += np.sin(U * 12 + V * 18) * 0.025  # Increased from 0.008
+            
+            # Add high-frequency noise patterns
+            freq_pattern += np.sin(U * 30 + c * 5) * np.cos(V * 25 + c * 6) * 0.02
+            freq_pattern += np.sin(U * 40 + V * 35) * 0.015
+            
+            # Apply high-frequency emphasis
+            freq_pattern *= high_freq_mask
+            
+            # Add to noise
+            freq_noise[:, :, c] += freq_pattern
+        
+        # Convert to spatial domain
+        spatial_noise = np.zeros_like(freq_noise)
+        for c in range(3):
+            spatial_noise[:, :, c] = np.real(ifft2(freq_noise[:, :, c]))
+        
+        # Normalize and scale with higher intensity for high-frequency components
+        spatial_noise = (spatial_noise - spatial_noise.min()) / (spatial_noise.max() - spatial_noise.min())
+        spatial_noise = spatial_noise * 0.25  # Increased from 0.1 for stronger effect
+        
+        return spatial_noise
+    
+    def _generate_fourier_noise_target(self, image_path: str) -> np.ndarray:
+        """
+        Generate Fourier domain noise optimized for deep dream processing.
+        
+        Args:
+            image_path: Path to the input image
+            
+        Returns:
+            Generated Fourier noise image optimized for deep dream
+        """
+        # Load the image to get its dimensions
+        img = cv2.imread(image_path)
+        if img is None:
             raise ValueError(f"Failed to load image {image_path}. Supported formats: JPG, PNG, JPEG, BMP, TIFF")
-        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
         
-        print(f"Applying enhanced chained hallucination (multi-space) with noise targets")
+        # Get image dimensions
+        height, width, channels = img.shape
         
-        # Initialize with original image
-        current_img = original_img.copy()
-        chain_steps = 8  # Reduced from 20
+        # Create Fourier noise
+        fourier_noise = self._create_fourier_noise(width, height)
         
-        # Generate two different noise images first
-        print("  Generating noise image 1...")
-        noise_target1 = self._create_perlin_noise()
+        # Convert to tensor for deep dream processing
+        noise_tensor = tf.convert_to_tensor(fourier_noise, dtype=tf.float32)
         
-        print("  Generating noise image 2...")
-        noise_target2 = self._create_structured_perlin_noise()
-        
-        # Dream each noise image separately with reduced intensity
-        print("  Dreaming noise image 1...")
-        dreamed_target1 = self._run_deep_dream(
-            img=noise_target1,
-            steps_per_octave=2,  # Reduced from self.steps
-            step_size=self.step_size * 0.5,  # Reduced step size
-            octaves=2,  # Reduced from self.num_ocataves
+        # Run deep dream on the Fourier noise
+        dreamed_fourier = self._run_deep_dream(
+            img=noise_tensor,
+            steps_per_octave=self.steps,
+            step_size=self.step_size,
+            octaves=self.num_ocataves,
             octave_scale=self.octave_scale
         )
-        dreamed_target1 = self._deprocess(dreamed_target1.numpy())
         
-        print("  Dreaming noise image 2...")
-        dreamed_target2 = self._run_deep_dream(
-            img=noise_target2,
-            steps_per_octave=2,  # Reduced from self.steps
-            step_size=self.step_size * 0.5,  # Reduced step size
-            octaves=2,  # Reduced from self.num_ocataves
-            octave_scale=self.octave_scale
-        )
-        dreamed_target2 = self._deprocess(dreamed_target2.numpy())
+        # Convert to RGB format
+        dreamed_rgb = self._deprocess(dreamed_fourier.numpy())
         
-        # Resize dreamed targets to match original image dimensions
-        height, width = original_img.shape[:2]
-        if dreamed_target1.shape[:2] != (height, width):
-            dreamed_target1 = cv2.resize(dreamed_target1, (width, height))
-        if dreamed_target2.shape[:2] != (height, width):
-            dreamed_target2 = cv2.resize(dreamed_target2, (width, height))
+        # Resize to match original image dimensions
+        if dreamed_rgb.shape[:2] != (height, width):
+            dreamed_rgb = cv2.resize(dreamed_rgb, (width, height))
         
-        # Much lower base step strength
-        base_step_strength = protection_strength * 0.08  # Reduced from 0.3
-        
-        for step in range(chain_steps):
-            if step < 2:
-                target_name = "Dreamed Noise 1"
-                dreamed_target = dreamed_target1
-                step_strength = base_step_strength * 1.0  # Reduced from 1.2
-            elif step < 4:
-                target_name = "Dreamed Noise 2" if step % 2 == 0 else "Dreamed Noise 1"
-                dreamed_target = dreamed_target2 if step % 2 == 0 else dreamed_target1
-                step_strength = base_step_strength * 0.6  # Reduced from 0.8
-            else:
-                target_name = "Dreamed Noise 2"
-                dreamed_target = dreamed_target2
-                step_strength = base_step_strength * 0.8  # Reduced from 1.0
-            
-            print(f"  Chain step {step + 1}/{chain_steps}: Dreaming toward {target_name} (strength: {step_strength:.3f})")
-            
-            # Apply only one perturbation per step, alternating between LAB and HSV
-            if step % 2 == 0:
-                current_img = self._apply_dreamed_perturbation_lab(current_img, dreamed_target, step_strength)
-            else:
-                current_img = self._apply_dreamed_perturbation_hsv(current_img, dreamed_target, step_strength)
-
-        # Remove final enhancement to preserve image quality
-        # current_img = self._apply_final_enhancement(current_img, protection_strength)
-
-        # Save the final enhanced chained hallucination
-        self._save_image(current_img, output_path)
-        return current_img
+        return dreamed_rgb
